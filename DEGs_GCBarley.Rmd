@@ -100,6 +100,7 @@ ABAgenes %>%
   theme(plot.title = element_text(hjust = 0.5), 
         legend.position="right", 
         legend.title = element_blank())
+# plotly::ggplotly is able to turn ggplot to interactive plot
 ```
 
 ```{r GABA DE genes}
