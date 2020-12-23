@@ -57,6 +57,7 @@ mds %>%
 ```
 
 ```{r estimating dispersions}
+# if with multiple factors, dispersion needs to be estimated with specified design matrix (see section 2.10.2 in edgeR user's guide updated in 21 Oct. 2019)
 counts_Disp <- estimateDisp(countList)
 plotBCV(counts_Disp)
 ```
@@ -108,7 +109,7 @@ GABAgenes <- GABA$table %>%
   rownames_to_column("GeneID") %>% 
   mutate(adj.p = p.adjust(PValue, method = "BH"))
 
-GABAgenes  %>% 
+GABAgenes %>% 
   mutate(expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                              ifelse(logFC > 1 ,'Up','Down'),
                              'Stable')) %>% 
@@ -130,5 +131,31 @@ GABAgenes  %>%
   theme(plot.title = element_text(hjust = 0.5), 
         legend.position="right", 
         legend.title = element_blank())
+```
+
+```{r some prepare for GO}
+ABAde <- ABAgenes %>% 
+  filter(adj.p < 0.05 & abs(logFC) >= 1)
+GABAde <- GABAgenes %>% 
+  filter(adj.p < 0.05 & abs(logFC) >= 1)
+
+ABAtags <- ABAgenes %>% 
+  mutate(ABA = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
+                      1,0)) %>% 
+  select(GeneID,ABA)
+GABAtags <- GABAgenes %>% 
+  mutate(GABA = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
+                       1,0)) %>% 
+  select(GeneID,GABA)
+
+merge(ABAtags,
+      GABAtags,
+      by = "GeneID") %>%
+  column_to_rownames("GeneID") %>%
+  vennDiagram(circle.col=c("turquoise", "salmon"))
+
+commonGene <- intersect(ABAde$GeneID,GABAde$GeneID)
+
+#save.image("~/Box/Bioinfo/BarleyGCRNASeq/DEGs.RData")
 ```
 
