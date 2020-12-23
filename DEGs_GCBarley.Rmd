@@ -73,11 +73,12 @@ fit <- glmQLFit(counts_Disp)
 ```{r ABA DE genes}
 # ABA Vs Control
 ABA <- glmQLFTest(fit, coef = 2)
-
-ABA$table %>% 
+ABAgenes <- ABA$table %>% 
   rownames_to_column("GeneID") %>% 
-  mutate(adj.p = p.adjust(PValue, method = "bonferroni"),
-         expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
+  mutate(adj.p = p.adjust(PValue, method = "BH"))
+
+ABAgenes %>% 
+  mutate(expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                              ifelse(logFC > 1 ,'Up','Down'),
                              'Stable')) %>% 
   ggplot(aes(x = logFC, 
@@ -103,11 +104,12 @@ ABA$table %>%
 ```{r GABA DE genes}
 # GABA Vs Control
 GABA <- glmQLFTest(fit, coef = 3)
-
-GABA$table %>% 
+GABAgenes <- GABA$table %>% 
   rownames_to_column("GeneID") %>% 
-  mutate(adj.p = p.adjust(PValue, method = "bonferroni"),
-         expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
+  mutate(adj.p = p.adjust(PValue, method = "BH"))
+
+GABAgenes  %>% 
+  mutate(expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                              ifelse(logFC > 1 ,'Up','Down'),
                              'Stable')) %>% 
   ggplot(aes(x = logFC, 
@@ -115,7 +117,7 @@ GABA$table %>%
              colour = expression)) +
   geom_point(alpha = 0.4, size = 3.5) +
   scale_color_manual(values=c("blue", "grey","red"))+
-  xlim(c(-12, 12)) +
+  xlim(c(-11, 11)) +
   geom_vline(xintercept = c(-1,1),
              lty=4,col="black",
              lwd=0.8) +
@@ -129,3 +131,4 @@ GABA$table %>%
         legend.position="right", 
         legend.title = element_blank())
 ```
+
