@@ -1,0 +1,13 @@
+Status	../3_BAM/GABA_S3.STARAligned_sortedByName.bam	../3_BAM/GABA_S2.STARAligned_sortedByName.bam	../3_BAM/GABA_S4.STARAligned_sortedByName.bam	../3_BAM/GABA_S1.STARAligned_sortedByName.bam	../3_BAM/Kont_S3.STARAligned_sortedByName.bam	../3_BAM/Kont_S2.STARAligned_sortedByName.bam	../3_BAM/Kont_S4.STARAligned_sortedByName.bam	../3_BAM/Kont_S1.STARAligned_sortedByName.bam	../3_BAM/ABA_S3.STARAligned_sortedByName.bam	../3_BAM/ABA_S2.STARAligned_sortedByName.bam	../3_BAM/ABA_S4.STARAligned_sortedByName.bam	../3_BAM/ABA_S1.STARAligned_sortedByName.bam
+Assigned	28523898	38867293	36380860	29003464	29430534	12804800	30534198	23973200	18159384	24656842	29900478	29269398
+Unassigned_Unmapped	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_MappingQuality	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Chimera	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_FragmentLength	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Duplicate	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_MultiMapping	2425315	3111776	3038760	2692641	2735636	7269552	2645700	3335430	1471753	2143228	2542498	2941511
+Unassigned_Secondary	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_NonSplit	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_NoFeatures	7709750	8612654	7638471	7243910	8314570	3633236	7261905	6345084	5572710	6012423	7310257	8530226
+Unassigned_Overlapping_Length	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Ambiguity	36298	59174	57372	49306	51145	22743	47324	37174	31428	43167	51705	50573
