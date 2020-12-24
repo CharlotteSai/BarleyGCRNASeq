@@ -1,0 +1,155 @@
+---
+title: "GO_GCBarley_oldFashion"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(magrittr)
+library(GO.db)
+library(annotate)
+library(parallel)
+library(scales)
+nCores <- min(detectCores() - 1, 12)
+```
+
+```{r collect GO for genes}
+go <- read_csv("BarleyAnnos/gene2GO.csv") %>% 
+  dplyr::select(-TransID)
+
+# attach go terms to each gene
+gene2GO <- go %>%
+  filter(!is.na(`GO_terms`)) %>%
+  split(f = .$`GeneID`) %>%
+  mclapply(function(x){
+    unique(x$`GO_terms`)
+  }, mc.cores = nCores)
+# Remove any with no GO terms
+gene2GO <- gene2GO[vapply(gene2GO, length, numeric(1)) > 0]
+
+# attach gene with each go term for later trackgo back to genes
+GO2genes <- go %>%
+  filter(!is.na(`GeneID`)) %>%
+  split(f = .$`GO_terms`) %>%
+  mclapply(function(x){
+    unique(x$`GeneID`)
+  }, mc.cores = nCores)
+GO2genes<- GO2genes[vapply(GO2genes, length, numeric(1)) > 0]
+```
+
+```{r build GO tree}
+# Collect all the ancestor terms for each GO term
+goAncestors <- c(
+  as.list(GOBPANCESTOR),
+  as.list(GOCCANCESTOR),
+  as.list(GOMFANCESTOR)
+)
+# Define the Root nodes
+rootGO <- list(
+  BP = "GO:0008150",
+  CC = "GO:0005575",
+  MF = "GO:0003674"
+)
+# Define the terms with <= 1 step back to the root nodes
+firstLevelGO <- list(
+  BP = c(rootGO$BP, get(rootGO$BP, GOBPCHILDREN)),
+  CC = c(rootGO$CC, get(rootGO$CC, GOCCCHILDREN)),
+  MF = c(rootGO$MF, get(rootGO$MF, GOMFCHILDREN))
+) %>%
+  lapply(unique)
+# Define the terms with <= 2 steps back to the root nodes
+secondLevelGO <- list(
+  BP = c(firstLevelGO$BP, lapply(firstLevelGO$BP, get, GOBPCHILDREN)),
+  CC = c(firstLevelGO$CC, lapply(firstLevelGO$CC, get, GOCCCHILDREN)),
+  MF = c(firstLevelGO$MF, lapply(firstLevelGO$MF, get, GOMFCHILDREN))
+) %>%
+  lapply(unlist) %>%
+  lapply(unique) %>%
+  lapply(function(x){x[!is.na(x)]})
+# Define the terms with <= 3 steps back to the root nodes
+thirdLevelGO <- list(
+  BP = c(secondLevelGO$BP, lapply(secondLevelGO$BP, get, GOBPCHILDREN)),
+  CC = c(secondLevelGO$CC, lapply(secondLevelGO$CC, get, GOCCCHILDREN)),
+  MF = c(secondLevelGO$MF, lapply(secondLevelGO$MF, get, GOMFCHILDREN))
+) %>%
+  mclapply(unlist, mc.cores = nCores) %>%
+  mclapply(unique, mc.cores = nCores) %>%
+  mclapply(function(x){x[!is.na(x)]}, mc.cores = nCores)
+# Expand so each gene now has all parent terms correctly assigned and also removing GO terms which are 3rd level or below
+gene2GO %<>% mclapply(function(x){
+  unlist(goAncestors[x]) %>% 
+    unique %>%
+    setdiff(unlist(thirdLevelGO)) %>% # This is now one step deeper into the go terms
+    # setdiff(unlist(secondLevelGO)) %>%  # This is the original method
+    setdiff("all")
+}, mc.cores = nCores)
+# Remove any with no GO terms again
+gene2GO <- gene2GO[vapply(gene2GO, length, numeric(1)) > 0]
+```
+
+```{r DEgene to collect go}
+#---------input DE gene----------#
+genes <- ABAde$GeneID
+DEgenes <- genes %>%
+  intersect(names(gene2GO))
+length(genes)
+length(DEgenes)
+#------------------------------------#
+
+deGenes2GO <- gene2GO[DEgenes]
+notDEGenes2GO <- gene2GO[setdiff(names(gene2GO), DEgenes)] 
+# genome wild protein coding gene except genes in the DEgenes as background
+
+deGO <- unlist(deGenes2GO) %>% 
+  table %>%
+  as.data.frame() %>%
+  set_names(c("Term", "DECount")) %>%
+  mutate(notDECount = table(unlist(notDEGenes2GO))[Term],
+         notDECount = as.vector(notDECount)) %>%
+  as_tibble() %>%
+  filter(DECount > 1) %>% # filter de count more than 1 for each go terms
+  arrange(Term) %>%
+  droplevels()
+nDE <- length(deGenes2GO)
+nNotDE <- length(notDEGenes2GO)
+
+results <- deGO %>%
+  split(f = .$Term) %>%
+  lapply(function(df){
+    mat <- matrix(c(df$DECount[1], df$notDECount[1],
+                    nDE - df$DECount[1], nNotDE - df$notDECount[1]),
+                  nrow = 2)
+    colnames(mat) <- c("Genes With GO Term", "Genes Without GO Term")
+    rownames(mat) <- c("Genes of Interest", "Control Genes")
+    ft <- fisher.test(mat)
+    mutate(df, 
+           Expected = percent(df$notDECount / nNotDE), # The percentage of genes with the term in the control set
+           Observed = percent(df$DECount / nDE), # The percentage of genes with the term in the set of interest
+           p = ft$p.value)
+  }) %>%
+  bind_rows() %>%
+  mutate(adjP = p.adjust(p, "bonferroni"),
+         FDR = p.adjust(p, "BY")) %>%
+  arrange(p)
+
+goSummaries <- url("https://uofabioinformaticshub.github.io/summaries2GO/data/goSummaries.RDS") %>%
+  readRDS()
+
+results %<>%
+  mutate(Description = Term(as.character(Term))) %>%
+  left_join(goSummaries, by = c("Term" = "id")) %>% 
+  filter(DECount > notDECount) %>% # consider the t.test is two-sided
+  dplyr::select(Term, Description, shortest_path, terminal_node, everything())
+```
+
+```{r}
+filteredRes <- results %>% 
+  filter(adjP < 0.05) 
+```
+
