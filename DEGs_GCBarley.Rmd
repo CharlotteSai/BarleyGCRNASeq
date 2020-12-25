@@ -29,7 +29,7 @@ meta <- tibble(sample = colnames(geneCounts),
 
 # construct DGElist, filtering and normalize RNA composition
 countList <- DGEList(counts = geneCounts,
-                     sample = meta) 
+                     samples = meta) 
 keep <- filterByExpr(countList)
 # By default, the function keeps genes with about 10 read counts or more in a minimum number of samples, where the number of samples is chosen according to the minimum group sample size. The actual filtering uses CPM values rather than counts in order to avoid giving preference to samples with large library sizes. For this dataset, the median library size is about 29 million and 10/29 approx. 0.34, so the filterByExpr function keeps genes that have a CPM of 0.34 or more in at least 4 samples.
 table(keep)
