@@ -136,31 +136,31 @@ GABAgenes %>%
 ```
 
 ```{r some prepare for GO}
-DEgenes <- list(ABAde = ABAgenes,
+DEs <- list(ABAde = ABAgenes,
      GABAde = GABAgenes) %>% 
   lapply(function(x){
     x %>% 
       filter(adj.p < 0.05 & abs(logFC) >= 1) %>% 
-      mutate(expression = ifelse(logFC >1, 
+      mutate(expression = ifelse(logFC > 1, 
                                  "Up", "Down"))
   })
 
 ABAtags <- ABAgenes %>% 
   mutate(ABA = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                       1,0)) %>% 
-  select(GeneID,ABA,logFC) %>% 
+  dplyr::select(GeneID,ABA,logFC) %>% 
   data.table::setnames("logFC","ABA_logFC") 
 GABAtags <- GABAgenes %>% 
   mutate(GABA = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                        1,0)) %>% 
-  select(GeneID,GABA,logFC) %>% 
+  dplyr::select(GeneID,GABA,logFC) %>% 
   data.table::setnames("logFC","GABA_logFC")
 
 # vennDiagram 
 merge(ABAtags,
       GABAtags,
       by = "GeneID") %>%
-  select(-contains("logFC")) %>% 
+  dplyr::select(-contains("logFC")) %>% 
   column_to_rownames("GeneID") %>%
   vennDiagram(circle.col=c("turquoise", "salmon"))
 
@@ -188,7 +188,7 @@ patternDE %>%
 
 # heatmap of gene Exp pattern
 patternDE %>% 
-  select(-contains("logFC")) %>% 
+  dplyr::select(-contains("logFC")) %>% 
   pheatmap(cluster_cols = FALSE,
            show_rownames = FALSE)
 
