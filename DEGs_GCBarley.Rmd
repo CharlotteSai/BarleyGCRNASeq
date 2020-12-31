@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(magrittr)
 library(edgeR)
+library(pheatmap)
 ```
 
 ```{r Data clean up}
@@ -135,28 +136,62 @@ GABAgenes %>%
 ```
 
 ```{r some prepare for GO}
-ABAde <- ABAgenes %>% 
-  filter(adj.p < 0.05 & abs(logFC) >= 1)
-GABAde <- GABAgenes %>% 
-  filter(adj.p < 0.05 & abs(logFC) >= 1)
+DEgenes <- list(ABAde = ABAgenes,
+     GABAde = GABAgenes) %>% 
+  lapply(function(x){
+    x %>% 
+      filter(adj.p < 0.05 & abs(logFC) >= 1) %>% 
+      mutate(expression = ifelse(logFC >1, 
+                                 "Up", "Down"))
+  })
 
 ABAtags <- ABAgenes %>% 
   mutate(ABA = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                       1,0)) %>% 
-  select(GeneID,ABA)
+  select(GeneID,ABA,logFC) %>% 
+  data.table::setnames("logFC","ABA_logFC") 
 GABAtags <- GABAgenes %>% 
   mutate(GABA = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                        1,0)) %>% 
-  select(GeneID,GABA)
+  select(GeneID,GABA,logFC) %>% 
+  data.table::setnames("logFC","GABA_logFC")
 
+# vennDiagram 
 merge(ABAtags,
       GABAtags,
       by = "GeneID") %>%
+  select(-contains("logFC")) %>% 
   column_to_rownames("GeneID") %>%
   vennDiagram(circle.col=c("turquoise", "salmon"))
 
-commonGene <- intersect(ABAde$GeneID,GABAde$GeneID)
+# common genes
+patternDE <- merge(ABAtags,
+      GABAtags,
+      by = "GeneID") %>% 
+  mutate(ABA = ifelse(ABA == 1 & ABA_logFC < 0,
+                      -1, ABA),
+         GABA = ifelse(GABA == 1 & GABA_logFC < 0,
+                      -1, GABA)) %>% 
+  column_to_rownames("GeneID") %>% 
+  filter(abs(ABA) == 1 | abs(GABA) == 1)
+  
 
-#save.image("~/Box/Bioinfo/BarleyGCRNASeq/DEGs.RData")
+# same direction
+patternDE %>% 
+  filter((ABA == 1 & GABA == 1) | (ABA == -1 & GABA == -1)) %>% 
+  row.names() # 448
+
+# opposite direction
+patternDE %>% 
+  filter((ABA == 1 & GABA == -1) | (ABA == -1 & GABA == 1)) %>% 
+  row.names() # 128
+
+# heatmap of gene Exp pattern
+patternDE %>% 
+  select(-contains("logFC")) %>% 
+  pheatmap(cluster_cols = FALSE,
+           show_rownames = FALSE)
+
+# save.image("~/Box/Bioinfo/BarleyGCRNASeq/DEGs.RData")
 ```
 
