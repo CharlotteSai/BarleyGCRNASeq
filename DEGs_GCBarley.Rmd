@@ -51,10 +51,15 @@ mds %>%
   left_join(meta) %>%
   ggplot(aes(x = x, y = y)) +
   geom_point(aes(colour  = group), 
-             size = 3) +
+             size = 7) +
   theme_bw() +
+  theme(text = element_text(size=20)) +
   labs(x = "BCV distance 1",
-       y = "BCV distance 2")
+       y = "BCV distance 2") -> mdsplot
+
+# export::graph2office(x = mdsplot, type = "ppt",
+#              file = "Barley_MDS.pptx", width = 10,
+#              aspectr = 1.5)
 ```
 
 ```{r estimating dispersions}
@@ -82,12 +87,13 @@ ABAgenes <- ABA$table %>%
 ABAgenes %>% 
   mutate(expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                              ifelse(logFC > 1 ,'Up','Down'),
-                             'Stable')) %>% 
+                             'Stable'),
+         expression = fct_relevel(expression, "Up","Stable","Down")) %>% 
   ggplot(aes(x = logFC, 
              y = -log10(adj.p), 
              colour = expression)) +
   geom_point(alpha = 0.4, size = 3.5) +
-  scale_color_manual(values=c("blue", "grey","red"))+
+  scale_color_manual(values=c("red", "grey","blue"))+
   xlim(c(-10, 10)) +
   geom_vline(xintercept = c(-1,1),
              lty=4,col="black",
@@ -97,11 +103,19 @@ ABAgenes %>%
              lwd=0.8) +
   labs(x="log2(fold change)",
        y="-log10 (adj.p-value)")  +
-  theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5), 
-        legend.position="right", 
-        legend.title = element_blank())
+  theme_bw() +
+  theme(text = element_text(size=20),
+        legend.text = element_text(size = 18),
+        plot.title = element_text(hjust = 0.5), 
+        legend.position = c(1, 0), 
+        legend.justification = c(1, 0), 
+        legend.title = element_blank()) +
+  ggtitle("ABA vs. Control") -> Vocano_ABA
 # plotly::ggplotly is able to turn ggplot to interactive plot
+
+# export::graph2office(x = Vocano_ABA, type = "ppt",
+#              file = "Barley_vocano.pptx", width = 10,
+#              aspectr = 1.5, append = TRUE)
 ```
 
 ```{r GABA DE genes}
@@ -114,12 +128,13 @@ GABAgenes <- GABA$table %>%
 GABAgenes %>% 
   mutate(expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
                              ifelse(logFC > 1 ,'Up','Down'),
-                             'Stable')) %>% 
+                             'Stable'),
+         expression = fct_relevel(expression, "Up","Stable","Down")) %>% 
   ggplot(aes(x = logFC, 
              y = -log10(adj.p), 
              colour = expression)) +
   geom_point(alpha = 0.4, size = 3.5) +
-  scale_color_manual(values=c("blue", "grey","red"))+
+  scale_color_manual(values=c("red", "grey","blue"))+
   xlim(c(-11, 11)) +
   geom_vline(xintercept = c(-1,1),
              lty=4,col="black",
@@ -129,10 +144,18 @@ GABAgenes %>%
              lwd=0.8) +
   labs(x="log2(fold change)",
        y="-log10 (adj.p-value)")  +
-  theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5), 
-        legend.position="right", 
-        legend.title = element_blank())
+  theme_bw() +
+  theme(text = element_text(size=20),
+        legend.text = element_text(size = 18),
+        plot.title = element_text(hjust = 0.5), 
+        legend.position = c(1, 0), 
+        legend.justification = c(1, 0), 
+        legend.title = element_blank()) +
+  ggtitle("GABA vs. Control") -> Vocano_GABA
+
+# export::graph2office(x = Vocano_GABA, type = "ppt",
+#              file = "Barley_vocano.pptx", width = 10,
+#              aspectr = 1.5, append = TRUE)
 ```
 
 ```{r some prepare for GO}
@@ -190,7 +213,23 @@ patternDE %>%
 patternDE %>% 
   dplyr::select(-contains("logFC")) %>% 
   pheatmap(cluster_cols = FALSE,
-           show_rownames = FALSE)
+           show_rownames = FALSE) -> testplot
+
+# give order to heatmap with logFC
+ordering <- tibble(rowNum = testplot$tree_row$order,
+                   order = seq(1, length(rowNum))) %>% 
+  arrange(rowNum)
+
+patternDE %>% 
+  mutate(ABA_logFC = ifelse(ABA == 0, 0, ABA_logFC),
+         GABA_logFC = ifelse(GABA == 0, 0, GABA_logFC)) %>% 
+  dplyr::select(-GABA, -ABA) %>% 
+  mutate(order = ordering$order) %>% 
+  arrange(order) %>%  
+  dplyr::select(-order) %>% 
+  pheatmap(cluster_cols = FALSE,
+           cluster_rows = FALSE,
+           show_rownames = FALSE) 
 
 # save.image("~/Box/Bioinfo/BarleyGCRNASeq/DEGs.RData")
 ```
