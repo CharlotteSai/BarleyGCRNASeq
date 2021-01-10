@@ -162,42 +162,51 @@ goRes_filter <- names(goRes) %>%
                           "development|morphogenesis|cardioblast|cardiocyte|muscle|heart|animal|determination|cell|synapse")))
     # filter out animal organ related GO (not relevant)
   })
+```
 
-geHeat <- goRes_filter %>%
-  # extract(1) %>%
-  lapply(function(x){
-    Data <- x %>%
-      mutate(p = ifelse(adjP < 0.05, p, 1),
-             p = -log10(p)) %>% 
+
+```{r go heatmap}
+# prepare p with direction
+goHeat <- goRes_filter %>%
+  bind_rows() %>% 
+  mutate(p = ifelse(adjP < 0.05, p, 1),
+             p = ifelse(expression == "Up",-log10(p), log10(p))) 
+
+paletteLength <- 100
+myBreaks <- c(seq(min(goHeat$p), 0, 
+                  length.out = ceiling(paletteLength/2) + 1), 
+              seq(max(goHeat$p)/paletteLength, max(goHeat$p), length.out=floor(paletteLength/2)))
+myColor <- colorRampPalette(c("blue", "white", "red"))(paletteLength)
+
+goHeat %<>% 
       reshape2::dcast(GO_term + Description + expression + ontology ~ Group,
                       value.var = "p") %>%
       mutate_all(~replace(., is.na(.), 0)) 
-    # data for heatmap
-    mapdata <- Data %>%
-      dplyr::select(GO_term,ABA,GABA) %>%
-      column_to_rownames("GO_term")
-    # color code
-    Exp <- unique(Data$expression)
-    blue <- colorRampPalette(c("white", "blue"))(15)
-    red <- colorRampPalette(c("white", "red"))(15)
-    colours <- case_when(
-      Exp == "Up" ~ red,
-      Exp == "Down" ~ blue
-    )
-    # add annos
-    ontology <- Data %>%
-      dplyr::select(GO_term,ontology) %>%
-      column_to_rownames("GO_term")
+mapdata <- goHeat %>% 
+  dplyr::select(ABA,GABA) %>% 
+  set_rownames(seq(1:length(.$ABA)))
+Annos <- goHeat %>% 
+  dplyr::select(ontology) %>% 
+  set_rownames(seq(1:length(.$ontology)))
 
-    # plot heatmap
-    pheatmap::pheatmap(mapdata,
-             cluster_cols = FALSE,
-             color = colours,
-             annotation_row = ontology,
-             labels_row = Data$Description)
-  })
+pheatmap::pheatmap(mat = mapdata,
+                   cluster_cols = FALSE,
+                   annotation_row = Annos,
+                   show_rownames = FALSE,
+                   breaks = myBreaks,
+                   color = myColor
+)  
 
-
+# goHeat %>% 
+#   with(
+#     pheatmap::pheatmap(mat = tibble(ABA,GABA),
+#                        cluster_cols = FALSE,
+#                        annotation_row = Annos, 
+#                        labels_row = GO_term,
+#                        breaks = myBreaks,
+#                        color = myColor
+#                        )
+#        )
 ```
 
 ```{r summary of GO}
