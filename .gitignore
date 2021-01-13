@@ -3,8 +3,8 @@
 .RData
 .Ruserdata
 *.csv
-1_FastQC
 *.RData
 *processed*
 *pptx
 *.pdf
+QCFiles

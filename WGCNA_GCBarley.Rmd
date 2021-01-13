@@ -1,0 +1,137 @@
+---
+title: "WGCNA_GCBarley"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages}
+library(tidyverse)
+library(magrittr)
+library(edgeR)
+library(matrixStats)
+library(WGCNA)
+```
+# Prepare input data 
+## Loading RNASeq counts data and filtering
+```{r data prepare}
+# londing counts
+geneCounts <- read_delim("4_Counts/GC_GABA_ABA_geneCounts_final.txt", 
+                         delim = "\t", 
+                         comment = "#") %>% 
+  column_to_rownames("Geneid")
+colnames(geneCounts) %<>% str_remove("../3_BAM/") %>% str_remove(".STARAligned_sortedByName.bam")
+
+# crate a meta data
+Group <- str_extract(colnames(geneCounts),".+(?=_)") 
+meta <- model.matrix(~ 0 + Group) 
+meta <- tibble(Sample = colnames(geneCounts),
+               Control = meta[,"GroupKont"],
+               ABA = meta[,"GroupABA"],
+               GABA = meta[,"GroupGABA"]) 
+
+# wrap data and filter with expression and variation to reduce the computational buget
+countList <- DGEList(counts = geneCounts, group = Group) %>% 
+  calcNormFactors()
+
+filteredByExpression <- rowSums(cpm(countList) > 1) >= 4
+filteredByVariation <- countList %>% 
+  cpm(log = TRUE) %>%
+  rowSds() %>%
+  is_greater_than(quantile(., probs = 0.25))
+
+countList<- countList[filteredByExpression&filteredByVariation,] 
+dim(countList)
+
+```
+
+## Checking data for missing values and identification of outlier
+```{r checking data 1.1}
+# put filtered data into proper input dataformat
+datExpr0 <- cpm(countList, log = TRUE) %>% t()
+names(datExpr0) <- colnames(datExpr0)
+# check missing values
+gsg = goodSamplesGenes(datExpr0, verbose = 3);
+gsg$allOK 
+# if return FALSE, then need to remove the offending genes and samples from data by run fullowing lines in comments
+# if (!gsg$allOK)
+# {
+#   # Optionally, print the gene and sample names that were removed:
+#   if (sum(!gsg$goodGenes)>0)
+#      printFlush(paste("Removing genes:", paste(names(datExpr0)[!gsg$goodGenes], collapse = ", ")));
+#   if (sum(!gsg$goodSamples)>0)
+#      printFlush(paste("Removing samples:", paste(rownames(datExpr0)[!gsg$goodSamples], collapse = ", ")));
+#   # Remove the offending genes and samples from the data:
+#   datExpr0 = datExpr0[gsg$goodSamples, gsg$goodGenes]
+# }
+```
+
+```{r checking data 1.2}
+# cluster the samoles to observe outliers
+sampleTree <- hclust(dist(datExpr0), method = "average");
+# Plot the sample tree: Open a graphic output window of size 12 by 9 inches
+# The user should change the dimensions if the window is too large or too small.
+sizeGrWindow(12,9)
+#pdf(file = "Plots/sampleClustering.pdf", width = 12, height = 9);
+par(cex = 0.6);
+par(mar = c(0,4,2,0))
+plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="", cex.lab = 1.5, cex.axis = 1.5, cex.main = 2, cex = 1.5)
+# remove outlier
+# Plot a line to show the cut
+abline(h = 160, col = "red") # no outlier in this case
+# Determine cluster under the line
+clust <- cutreeStatic(sampleTree, cutHeight = 160, minSize = 10)
+table(clust)
+# clust 1 contains the samples we want to keep.
+keepSamples <- (clust==1)
+datExpr <- datExpr0[keepSamples, ]
+nGenes <- ncol(datExpr)
+nSamples <- nrow(datExpr)
+names(datExpr) <- colnames(datExpr)
+```
+
+## loading meta data and intergrated with samples
+```{r intergrate with meta data}
+# load meta data 
+meta.datExpr <- filter(meta, Sample %in% rownames(datExpr))[,-1]
+rownames(meta.datExpr) <- filter(meta, Sample %in% rownames(datExpr))$Sample
+# Re-cluster samples
+sampleTree2 <- hclust(dist(datExpr), method = "average")
+# Convert traits to a color representation: white means low, red means high, grey means missing entry
+traitColors <- numbers2colors(meta.datExpr)
+# Plot the sample dendrogram and the colors underneath.
+plotDendroAndColors(sampleTree2, traitColors,
+                    groupLabels = names(meta.datExpr),
+                    main = "Sample dendrogram and trait heatmap")
+```
+
+# Network construction and mudule detection
+## Choose a set of soft-threshold powers
+```{r choose threshold power}
+# Choose a set of soft-thresholding powers
+powers <- c(c(1:10), seq(from = 12, to=20, by=2))
+# Call the network topology analysis function
+sft <- pickSoftThreshold(datExpr, powerVector = powers, verbose = 5)
+# Plot the results:
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2))
+cex1 = 0.9
+# Scale-free topology fit index as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"))
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red")
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red") 
+# in this case 18 is the lowest power for which  the scale-free topology fit  intdex  reaches 0.090
+# Mean connectivity as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+```
