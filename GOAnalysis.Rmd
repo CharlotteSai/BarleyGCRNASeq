@@ -1,5 +1,5 @@
 ---
-title: "GO_GCBarley_oldFashion"
+title: "GO_GCBarley_StableVersion"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -78,6 +78,7 @@ goSummaries <- url("https://uofabioinformaticshub.github.io/summaries2GO/data/go
 
 ```{r DEgene enrich go}
 #--------- DE gene summary ----------#
+load("~/Box/Bioinfo/BarleyGCRNASeq/DEGs.RData")
 DEs %>% 
   lapply(function(de){
     tibble(n.de = length(de$GeneID),
@@ -161,7 +162,7 @@ goRes_filter <- names(goRes) %>%
       filter(!(str_detect(Description,
                           "development|morphogenesis|cardioblast|cardiocyte|muscle|heart|animal|determination|cell|synapse")))
     # filter out animal organ related GO (not relevant)
-  })
+  }) 
 ```
 
 
