@@ -26,7 +26,9 @@ colnames(geneCounts) %<>% str_remove("../3_BAM/") %>% str_remove(".STARAligned_s
 # crate meta data
 meta <- tibble(sample = colnames(geneCounts),
               group = str_extract(sample,".+(?=_)"), # this info will fill to 'group' as col name match 'group' pram in DGEList()
-              reps = str_extract(sample,"(?<=_).+"))
+              reps = str_extract(sample,"(?<=_).+")) %>% 
+  filter(sample != "Kont_S2")
+geneCounts %<>% select(-Kont_S2) # remove the sample that is very badly mapped
 
 # construct DGElist, filtering and normalize RNA composition
 countList <- DGEList(counts = geneCounts,
@@ -231,6 +233,6 @@ patternDE %>%
            cluster_rows = FALSE,
            show_rownames = FALSE) 
 
-# save.image("~/Box/Bioinfo/BarleyGCRNASeq/DEGs.RData")
+# save.image("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
 ```
 
