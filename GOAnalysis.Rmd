@@ -78,7 +78,7 @@ goSummaries <- url("https://uofabioinformaticshub.github.io/summaries2GO/data/go
 
 ```{r DEgene enrich go}
 #--------- DE gene summary ----------#
-load("~/Box/Bioinfo/BarleyGCRNASeq/DEGs.RData")
+# load("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
 DEs %>% 
   lapply(function(de){
     tibble(n.de = length(de$GeneID),
@@ -158,8 +158,8 @@ goRes_filter <- names(goRes) %>%
   lapply(function(x){
     x %>% 
       group_by(GO_term) %>% 
-      filter(any(adjP < 0.05 & shortest_path >= 4)) %>% 
-      filter(!(str_detect(Description,                          "development|morphogenesis|cardioblast|cardiocyte|muscle|heart|animal|determination| cell |synapse")))
+      filter(any(adjP < 0.05 & shortest_path >= 4)) #%>% 
+      # filter(!(str_detect(Description,                          "development|morphogenesis|cardioblast|cardiocyte|muscle|heart|animal|determination| cell |synapse")))
     # filter out animal organ related GO (not relevant)
   }) 
 ```
@@ -217,15 +217,15 @@ goFinal <- goRes_filter %>%
 
 # GABA ABA share
 go2Gene[["GO:0004553"]] # down
+go2Gene[["GO:0016301"]] # down
 
 
 # ABA
-go2Gene[["GO:0005506"]] # both direction sig
 go2Gene[["GO:0006468"]] # most sig down
 go2Gene[["GO:0004722"]] # most sig up
 
 # GABA
 go2Gene[["GO:0046982"]] # most sig up
-go2Gene[["GO:0045156"]] # most sig down
+go2Gene[["GO:0004553"]] # most sig down
 ```
 
