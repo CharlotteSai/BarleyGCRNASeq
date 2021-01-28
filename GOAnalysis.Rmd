@@ -134,12 +134,12 @@ goRes <- DEs %>%
           }) %>%
           bind_rows() %>%
           mutate(adjP = p.adjust(p, "bonferroni"),
-                 FDR = p.adjust(p, "BY"),
+                 FDR = p.adjust(p, "fdr"),
                  Description = Term(as.character(GO_term)),
                  expression = unique(de$expression)) %>%
           arrange(p) %>%
           left_join(goSummaries, by = c("GO_term" = "id")) %>%
-          filter(DECount > Expected) %>% # consider the t.test is two-sided
+          filter(DECount > Expected) %>% # consider the fisher test is two-sided
           dplyr::select(GO_term, Description, DECount, Expected, N, everything())
       }) %>% 
       bind_rows()
@@ -158,7 +158,7 @@ goRes_filter <- names(goRes) %>%
   lapply(function(x){
     x %>% 
       group_by(GO_term) %>% 
-      filter(any(adjP < 0.05 & shortest_path >= 4)) #%>% 
+      filter(any(adjP <= 0.05 & shortest_path >= 4)) #%>% 
       # filter(!(str_detect(Description,                          "development|morphogenesis|cardioblast|cardiocyte|muscle|heart|animal|determination| cell |synapse")))
     # filter out animal organ related GO (not relevant)
   }) 
@@ -169,8 +169,14 @@ goRes_filter <- names(goRes) %>%
 # prepare p with direction
 goHeat <- goRes_filter %>%
   bind_rows() %>% 
-  mutate(p = ifelse(adjP < 0.05, p, 1),
-             p = ifelse(expression == "Up",-log10(p), log10(p))) 
+  mutate(
+    p = ifelse(
+      adjP <= 0.05, p, 1
+    ),
+    p = ifelse(
+      expression == "Up", -log10(p), log10(p)
+    )
+  ) 
 
 paletteLength <- 100
 myBreaks <- c(seq(min(goHeat$p), 0, 
@@ -212,7 +218,7 @@ pheatmap::pheatmap(mat = mapdata,
 ```{r summary of GO}
 goFinal <- goRes_filter %>% 
   bind_rows() %>% 
-  filter(adjP < 0.05) %>% 
+  filter(adjP <= 0.05) %>% 
   split(f = .$Group)
 
 # GABA ABA share
