@@ -224,7 +224,7 @@ goFinal <- goRes_filter %>%
 # GABA ABA share
 go2Gene[["GO:0004553"]] # down
 go2Gene[["GO:0016301"]] # down
-
+go2Gene[["GO:0016773"]] # opposite share
 
 # ABA
 go2Gene[["GO:0006468"]] # most sig down
@@ -233,5 +233,7 @@ go2Gene[["GO:0004722"]] # most sig up
 # GABA
 go2Gene[["GO:0046982"]] # most sig up
 go2Gene[["GO:0004553"]] # most sig down
+
+# save.image("~/Box/Bioinfo/BarleyGCRNASeq/GORes.RData")
 ```
 
