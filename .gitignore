@@ -8,3 +8,5 @@
 *pptx
 *.pdf
 QCFiles
+*.fa
+*.fasta
