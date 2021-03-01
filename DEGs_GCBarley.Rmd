@@ -13,7 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(magrittr)
 library(edgeR)
-library(pheatmap)
 ```
 
 ```{r Data clean up}
@@ -229,7 +228,7 @@ patternDE %>%
   mutate(order = ordering$order) %>% 
   arrange(order) %>%  
   dplyr::select(-order) %>% 
-  pheatmap(cluster_cols = FALSE,
+  pheatmap::pheatmap(cluster_cols = FALSE,
            cluster_rows = FALSE,
            show_rownames = FALSE) 
 

@@ -19,12 +19,13 @@ library(WGCNA)
 # Prepare input data 
 ## Loading RNASeq counts data and filtering
 ```{r data prepare}
-# londing counts
+# loading counts
 geneCounts <- read_delim("4_Counts/GC_GABA_ABA_geneCounts_final.txt", 
                          delim = "\t", 
                          comment = "#") %>% 
   column_to_rownames("Geneid")
 colnames(geneCounts) %<>% str_remove("../3_BAM/") %>% str_remove(".STARAligned_sortedByName.bam")
+geneCounts %<>% dplyr::select(-Kont_S2) # remove the sample that is very badly mapped
 
 # crate a meta data
 Group <- str_extract(colnames(geneCounts),".+(?=_)") 
@@ -35,14 +36,16 @@ meta <- tibble(Sample = colnames(geneCounts),
                GABA = meta[,"GroupGABA"]) 
 
 # wrap data and filter with expression and variation to reduce the computational buget
-countList <- DGEList(counts = geneCounts, group = Group) %>% 
+countList <- DGEList(counts = geneCounts,
+                     group = Group) %>% 
   calcNormFactors()
 
 filteredByExpression <- rowSums(cpm(countList) > 1) >= 4
+# filteredByExpression <- filterByExpr(countList)
 filteredByVariation <- countList %>% 
   cpm(log = TRUE) %>%
   rowSds() %>%
-  is_greater_than(quantile(., probs = 0.25))
+  is_greater_than(quantile(., probs = 0.50))
 
 countList<- countList[filteredByExpression&filteredByVariation,] 
 dim(countList)
@@ -80,11 +83,15 @@ sizeGrWindow(12,9)
 par(cex = 0.6);
 par(mar = c(0,4,2,0))
 plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="", cex.lab = 1.5, cex.axis = 1.5, cex.main = 2, cex = 1.5)
+```
+
+
+```{r checking data 1.3}
 # remove outlier
 # Plot a line to show the cut
 abline(h = 160, col = "red") # no outlier in this case
 # Determine cluster under the line
-clust <- cutreeStatic(sampleTree, cutHeight = 160, minSize = 10)
+clust <- cutreeStatic(sampleTree, cutHeight = 200, minSize = 10)
 table(clust)
 # clust 1 contains the samples we want to keep.
 keepSamples <- (clust==1)
@@ -97,8 +104,8 @@ names(datExpr) <- colnames(datExpr)
 ## loading meta data and intergrated with samples
 ```{r intergrate with meta data}
 # load meta data 
-meta.datExpr <- filter(meta, Sample %in% rownames(datExpr))[,-1]
-rownames(meta.datExpr) <- filter(meta, Sample %in% rownames(datExpr))$Sample
+meta.datExpr <- filter(meta, Sample %in% rownames(datExpr)) %>% 
+  column_to_rownames("Sample")
 # Re-cluster samples
 sampleTree2 <- hclust(dist(datExpr), method = "average")
 # Convert traits to a color representation: white means low, red means high, grey means missing entry
@@ -113,9 +120,12 @@ plotDendroAndColors(sampleTree2, traitColors,
 ## Choose a set of soft-threshold powers
 ```{r choose threshold power}
 # Choose a set of soft-thresholding powers
-powers <- c(c(1:10), seq(from = 12, to=20, by=2))
+powers <- c(c(1:10), seq(from = 12, to = 30, by=2))
 # Call the network topology analysis function
-sft <- pickSoftThreshold(datExpr, powerVector = powers, verbose = 5)
+sft <- pickSoftThreshold(datExpr, 
+                         networkType = "unsigned",
+                         powerVector = powers, 
+                         verbose = 5)
 # Plot the results:
 sizeGrWindow(9, 5)
 par(mfrow = c(1,2))
@@ -127,11 +137,158 @@ plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
 text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      labels=powers,cex=cex1,col="red")
 # this line corresponds to using an R^2 cut-off of h
-abline(h=0.90,col="red") 
-# in this case 18 is the lowest power for which  the scale-free topology fit  intdex  reaches 0.090
+abline(h=0.80,col="red") 
+# in this case, the highest SFT.R.sq is 0.8180 with power at 16, none of them reach 0.9. 
 # Mean connectivity as a function of the soft-thresholding power
 plot(sft$fitIndices[,1], sft$fitIndices[,5],
      xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
      main = paste("Mean connectivity"))
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 ```
+
+## Topological Overlap Matrix (TOM)
+```{r TOM - construct tree}
+# final decision of threshholding power and Co-expression similarity and adjacency calculation
+softPower = 16
+adjacency <- adjacency(datExpr, 
+                       power = softPower,
+                       type = "unsigned")
+# Turn adjacency into topological overlap
+TOM <- TOMsimilarity(adjacency,
+                     TOMType = "unsigned")
+dissTOM <- 1-TOM
+# Call the hierarchical clustering function
+geneTree <- hclust(as.dist(dissTOM), method = "average")
+# Plot the resulting clustering tree (deprogram)
+sizeGrWindow(12,9)
+plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
+     labels = FALSE, hang = 0.04)
+# We like large modules, so we set the minimum module size relatively high:
+minModuleSize = 30;
+# Module identification using dynamic tree cut:
+dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                            deepSplit = 2, pamRespectsDendro = FALSE,
+                            minClusterSize = minModuleSize);
+table(dynamicMods)
+# lable 0 is reserved for unassigned genes, and returned woth 60 modules from largest to smallest.
+# Convert numeric lables into colors
+dynamicColors <- labels2colors(dynamicMods)
+table(dynamicColors)
+# Plot the dendrogram and colors underneath
+sizeGrWindow(8,6)
+plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05,
+                    main = "Gene dendrogram and module colors") 
+```
+
+## Merging of modules whose expression profiles are very similar
+```{r merging similar module}
+# Calculate eigengenes
+MEList <- moduleEigengenes(datExpr, colors = dynamicColors)
+MEs <- MEList$eigengenes
+# Calculate dissimilarity of module eigengenes
+MEDiss <- 1-cor(MEs)
+# Cluster module eigengenes
+METree <- hclust(as.dist(MEDiss), method = "average");
+# Plot the result
+sizeGrWindow(7, 6)
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+# choose a height cut of 0.25, corresponding to correlation of 0.75 to merge
+MEDissThres = 0.25
+
+# Plot the cut line into the dendrogram
+abline(h = MEDissThres, col = "red")
+# Call an automatic merging function
+merge <- mergeCloseModules(datExpr, dynamicColors, cutHeight = MEDissThres, verbose = 3)
+# The merged module colors
+mergedColors <- merge$colors
+table(mergedColors)
+# Eigengenes of the new merged modules:
+mergedMEs <- merge$newMEs
+# plot gene dendrogram again
+sizeGrWindow(12, 9)
+#pdf(file = "Plots/geneDendro-3.pdf", wi = 9, he = 6)
+plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
+                    c("Dynamic Tree Cut", "Merged dynamic"),
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05)
+#dev.off()
+```
+
+# Relating modules to external information and identifying important genes
+## Relating modules to external traits
+```{r relating mudule with external traits}
+# Rename to moduleColors
+moduleColors <- mergedColors
+# Construct numerical labels corresponding to the colors
+colorOrder <- c("grey", standardColors(50))
+moduleLabels <- match(moduleColors, colorOrder)-1
+MEs <- mergedMEs
+# Recalculate MEs with color labels
+MEs0 <- moduleEigengenes(datExpr, moduleColors)$eigengenes
+MEs <- orderMEs(MEs0)
+# moduleTraitCor <- cor(MEs, meta.datExpr, use = "p")
+# consider the sample trait is binary variable, use bicor instead of cor to calculate correlation
+moduleTraitCor <- bicor(x = MEs, 
+                        y = meta.datExpr, 
+                        robustY = FALSE,
+                        use = "p")
+moduleTraitPvalue <- corPvalueStudent(moduleTraitCor, nSamples)
+
+# color code each association by the correlation value
+sizeGrWindow(10,6)
+# Will display correlations and their p-values
+textMatrix = paste(signif(moduleTraitCor, 2), "\n(",
+                        signif(moduleTraitPvalue, 1), ")", sep = "");
+dim(textMatrix) = dim(moduleTraitCor)
+par(mar = c(6, 8.5, 3, 3));
+# Display the correlation values within a heatmap plot
+labeledHeatmap(Matrix = moduleTraitCor,
+               xLabels = names(meta.datExpr),
+               yLabels = names(MEs),
+               ySymbols = names(MEs),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = textMatrix,
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("Module-trait relationships"))
+```
+
+```{r better version corrilation plot}
+data <- as.data.frame(moduleTraitCor)
+text <- as.data.frame(textMatrix) %>% set_colnames(colnames(data))
+data <- mutate(data,"Sample"=row.names(moduleTraitCor))
+text <- mutate(text,"Sample"=data$Sample)
+dataM = reshape2::melt(data = data)
+textM = reshape2::melt(data = text, id.vars = "Sample")
+colnames(dataM)[2:3] <- c("Treatment","Correlation")
+dataM <- mutate(dataM,"Text" = textM$value)
+
+ggplot2::ggplot(dataM,aes(x=Treatment,y=Sample,fill=Correlation)) + 
+  geom_tile() +
+  scale_fill_gradient2(low=("lightblue"),
+                       high=("red"),
+                       mid="white",
+                       midpoint=0,
+                       guide="colourbar") +
+  geom_text(aes(x = Treatment,
+                y = Sample,
+                label = Text),
+            size = 3) +
+  theme(axis.text.x =  element_text(size=12,
+                                    angle = 45,
+                                    vjust = 0.5),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+
+# Pairwise scatterplots of module eigengenes and treatment
+plotMEpairs(MEs,y = meta.datExpr["ABA"]) # ABA
+
+plotMEpairs(MEs,y = meta.datExpr["GABA"]) # GABA
+```
+
+
