@@ -1,0 +1,47 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	STAR_GenomeLength
+	1
+
+[Fri Feb 21 15:57:32 2020]
+rule STAR_GenomeLength:
+    input: ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.fai
+    output: ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/GenomeLength
+    jobid: 0
+    wildcards: fasta=Barley_Morex_V2_pseudomolecules.fasta
+
+[Fri Feb 21 15:57:32 2020]
+Finished job 0.
+1 of 1 steps (100%) done
+
+===========================================================================
+Phoenix Job Utilisation Reporting
+===========================================================================
+Job Name            : STAR_GenomeLength
+Job ID              : 22311898
+User                : a1673472
+Account             : waite
+Cluster             : phoenix
+Partition           : cpu
+Nodes (List)        : 1 (r2n35)
+Cores               : 1
+GPUs                : 0
+State               : COMPLETED
+Submit              : 2020-02-21T15:56:53
+Start               : 2020-02-21T15:57:22
+End                 : 2020-02-21T15:57:32
+Walltime reserved   : 00:05:00
+Walltime elapsed (%): 00:00:10  ( 3.3% * reserved)
+CPU-time elapsed    : 0.00 core-hours
+% CPU used (Total)  :  6.05%    (0.00 core-hours)
+% User CPU (Compute):  1.89%    (0.00 core-hours)
+% System CPU (I/O)  :  4.15%    (0.00 core-hours)
+Mem reserved        : 200M/node
+% Mem used (Max)    :  0.41%    (832.00K/node) 
+Max Disk Write      : 0.00      (r2n35)
+Max Disk Read       : 0.00      (r2n35)
+===========================================================================

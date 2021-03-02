@@ -1,0 +1,291 @@
+import math
+
+singularity:
+	"docker://continuumio/miniconda3:4.5.12"
+
+MAX_THREADS = 32
+N_BENCHMARKS = 1
+
+GROUPS = ["Kont","ABA","GABA"]
+REPS = ["S1","S2","S3","S4"]
+READS = ["R1","R2"]
+
+FASTA = "Barley_Morex_V2_pseudomolecules.fasta"
+STAR_INDEX_FILES = ["chrLength.txt","chrNameLength.txt","chrName.txt",
+"chrStart.txt","SA","SAindex","Genome","genomeParameters.txt"]
+LOCAL_SCRATCH = "./local_scrach"
+
+outFilterMismatchNoverLmax = 0.02
+alignEndsType              = "Local"
+############################
+# Include other Snakefiles #
+############################
+include:
+	"rules/misc.smk"
+
+#######################################
+# Convienient rules to define targets #
+#######################################
+localrules:
+	all
+
+rule all:
+	input:
+		expand("../0_fastq/{group}_{rep}_{read}.fastq.gz", group = GROUPS, rep = REPS, read = READS),
+		expand("../1_FastQC/Raw/{group}_{rep}_{read}_fastqc.html", group = GROUPS, rep = REPS, read = READS),
+		expand("../2_Trimmed/{group}_{rep}_{read}_Trimmed.fastq.gz", group = GROUPS, rep = REPS, read = READS),
+		expand("../1_FastQC/Trimmed/{group}_{rep}_{read}_Trimmed_fastqc.html", group = GROUPS, rep = REPS, read = READS),
+		expand("../Hv_genome/{fasta}",fasta=FASTA),
+		expand("../Hv_genome/{fasta}.fai",fasta=FASTA),
+		expand("../Hv_genome/{fasta}.gz_STAR_index/NumberOfReferences",fasta=FASTA),
+		expand("../Hv_genome/{fasta}.gz_STAR_index/GenomeLength",fasta=FASTA),
+		expand("../Hv_genome/{fasta}.gz_STAR_index/{file}",fasta=FASTA,file=STAR_INDEX_FILES),
+		expand("../3_BAM/{group}_{rep}.STARAligned_sortedByCoord.bam", group = GROUPS, rep = REPS),
+		expand("../3_BAM/{group}_{rep}.SJ.out.tab", group = GROUPS, rep = REPS),
+		expand("../3_BAM/logs/{group}_{rep}.Log.out", group = GROUPS, rep = REPS),
+		expand("../3_BAM/logs/{group}_{rep}.Log.progress.out", group = GROUPS, rep = REPS),
+		expand("../3_BAM/logs/{group}_{rep}.Log.final.out", group = GROUPS, rep = REPS),
+		expand("../3_BAM/logs/{group}_{rep}.Log.std.out", group = GROUPS, rep = REPS),
+		"../Hv_genome/gene_annotation/Barley_Morex_V2_gene_annotation_PGSB.all.gff3.gz",
+		"../4_Counts/GC_GABA_ABA_geneCounts_final.txt"		
+
+################
+# Rules Proper #
+################
+
+rule fastqc_raw:
+	input:
+		"../0_fastq/{group}_{rep}_{read}.fastq.gz"
+	output:
+		zip = "../1_FastQC/Raw/{group}_{rep}_{read}_fastqc.zip",
+		html = "../1_FastQC/Raw/{group}_{rep}_{read}_fastqc.html",
+	conda:
+		"envs/default.yml"
+	shell:  
+		"""
+		fastqc --threads 1 {input}
+		mv ../0_fastq/{wildcards.group}_{wildcards.rep}_{wildcards.read}_fastqc.zip {output.zip}
+		mv ../0_fastq/{wildcards.group}_{wildcards.rep}_{wildcards.read}_fastqc.html {output.html}
+		"""
+
+rule Trimmatic:
+	input:
+		r1 = "../0_fastq/{group}_{rep}_R1.fastq.gz",
+		r2 = "../0_fastq/{group}_{rep}_R2.fastq.gz",
+		adaptors = "Illumina_adaptors_PE.fa",
+	output:
+		r1 = "../2_Trimmed/{group}_{rep}_R1_Trimmed.fastq.gz", 
+		r1_unpaired = "../2_Trimmed/{group}_{rep}_R1_unpaired.fastq.gz",
+		r2 = "../2_Trimmed/{group}_{rep}_R2_Trimmed.fastq.gz",
+		r2_unpaired = "../2_Trimmed/{group}_{rep}_R2_unpaired.fastq.gz",
+	conda:
+		"envs/default.yml"
+	shell:
+		"""
+		trimmomatic PE \
+		      -threads 1 \
+		      {input.r1} {input.r2} \
+		      {output.r1} {output.r1_unpaired} \
+		      {output.r2} {output.r2_unpaired} \
+		      ILLUMINACLIP:{input.adaptors}:2:30:10:3:true \
+		      LEADING:2 \
+		      TRAILING:2 \
+		      SLIDINGWINDOW:4:15 \
+		      MINLEN:70
+                """
+
+rule fastq_trimmed:
+	input:
+		"../2_Trimmed/{group}_{rep}_{read}_Trimmed.fastq.gz"
+	output:
+		zip = "../1_FastQC/Trimmed/{group}_{rep}_{read}_Trimmed_fastqc.zip",
+		html = "../1_FastQC/Trimmed/{group}_{rep}_{read}_Trimmed_fastqc.html",
+	conda:
+		"envs/default.yml"
+	shell:
+		"""
+		fastqc --threads 1 {input}
+		mv ../2_Trimmed/{wildcards.group}_{wildcards.rep}_{wildcards.read}_Trimmed_fastqc.zip {output.zip}
+		mv ../2_Trimmed/{wildcards.group}_{wildcards.rep}_{wildcards.read}_Trimmed_fastqc.html {output.html}
+		"""
+
+rule STAR_NumberOfReferences:
+	input:
+		"../Hv_genome/{fasta}.fai"
+	output:
+		"../Hv_genome/{fasta}.gz_STAR_index/NumberOfReferences"
+	shell:
+		"""
+		wc -l < {input} > {output}
+		"""
+
+rule STAR_GenomeLength:
+	input:
+		"../Hv_genome/{fasta}.fai"
+	output:
+		"../Hv_genome/{fasta}.gz_STAR_index/GenomeLength"
+	shell:
+		"""
+		awk '{{tot+=$2}}END{{print tot}}' {input} > {output}
+		"""
+
+rule STAR_indexing:
+	input:
+		ref                = "../Hv_genome/{fasta}",
+		NumberOfReferences = "../Hv_genome/{fasta}.gz_STAR_index/NumberOfReferences",
+		GenomeLength       = "../Hv_genome/{fasta}.gz_STAR_index/GenomeLength",
+	output:
+		expand("../Hv_genome/{{fasta}}.gz_STAR_index/{file}", file=STAR_INDEX_FILES)
+	threads:
+		MAX_THREADS
+	resources:
+		mem_gb = 10
+	params:
+		tmp_dir = LOCAL_SCRATCH,
+		limitGenomeGenerateRAM = 320 * 1000000000
+	conda:
+		"envs/default.yml"
+	shell:
+		"""
+		mkdir -p {params.tmp_dir}
+		TMP_OUT="$(mktemp --directory --dry-run {params.tmp_dir}/tmp.XXXXXXXXXX_STARtmp)"
+		TMP_GENOME_OUT="$(mktemp --directory {params.tmp_dir}/tmp.XXXXXXXXXX_STAR_index)"
+
+		function clean_up {{
+		  # Perform program exit housekeeping
+		  if [ ! -z "${{TMP_OUT}}" ] && [ -e "${{TMP_OUT}}" ]; then
+		    rm -rf "${{TMP_OUT}}" "${{TMP_GENOME_OUT}}"
+		  fi
+		  trap 0  # reset to default action
+		  exit
+		}}
+		trap clean_up 0 1 2 3 15 #see 'man signal' for descriptions http://man7.org/linux/man-pages/man7/signal.7.html
+
+		genomeChrBinNbits=$(echo "v=l($(cat {input.GenomeLength})/$(cat {input.NumberOfReferences})) / l(2); scale=0; def=18; if (def<v) def else v/1" | bc -l)
+		genomeSAindexNbases=$(echo "v=(l($(cat {input.GenomeLength}))/2-1) / l(2); def=14; if(def<v) def else v/1; scale=0;" | bc -l)
+
+		STAR \
+		  --runMode genomeGenerate \
+		  --outTmpDir ${{TMP_OUT}} \
+		  --genomeDir ${{TMP_GENOME_OUT}} \
+		  --genomeChrBinNbits ${{genomeChrBinNbits}} \
+		  --genomeSAindexNbases ${{genomeSAindexNbases}} \
+		  --genomeFastaFiles {input.ref} \
+		  --limitGenomeGenerateRAM {params.limitGenomeGenerateRAM} \
+		  --runThreadN {threads}
+
+		mv ${{TMP_GENOME_OUT}}/* ../Hv_genome/{wildcards.fasta}.gz_STAR_index/
+		"""
+
+rule STAR_mapping:
+	input:
+		R1    = "../2_Trimmed/{group}_{rep}_R1_Trimmed.fastq.gz",
+		R2    = "../2_Trimmed/{group}_{rep}_R2_Trimmed.fastq.gz",
+		index = expand("../Hv_genome/{fasta}.gz_STAR_index/{file}", fasta=FASTA, file=STAR_INDEX_FILES),
+	output:
+		bam              = "../3_BAM/{group}_{rep}.STARAligned_sortedByCoord.bam",
+		splice_junctions = "../3_BAM/{group}_{rep}.SJ.out.tab"
+	log:
+		main     = "../3_BAM/logs/{group}_{rep}.Log.out",
+		progress = "../3_BAM/logs/{group}_{rep}.Log.progress.out",
+		final    = "../3_BAM/logs/{group}_{rep}.Log.final.out",
+		std      = "../3_BAM/logs/{group}_{rep}.Log.std.out",
+#	wildcard_constraints:
+#		group  = "[^\/]+",
+#		rep = "[^\/]+",
+	resources:
+#		mem_mb = lambda wildcards, threads: threads * 2
+#		mem_gb = lambda wildcards, threads, input: math.ceil( (sum(os.path.getsize(f) for f in input['index']) / 1024**3) + (0.15 * threads) ) + 5
+		mem_gb = lambda wildcards, input: math.ceil( (sum(os.path.getsize(f) for f in input['index'] if os.path.isfile(f)) / 1024**3) + (0.15 * MAX_THREADS) ) + 5,
+#		time_min = lambda wildcards, attempt, input: max(math.ceil(sum(os.path.getsize(f) for f in [input['R1'],input['R2']] if os.path.isfile(f)) / 1024**3 / 30), 15) * 10 * attempt
+#		time_min = lambda wildcards, attempt: 30 * attempt
+	threads:
+		# STAR craps itself with more cores than this - giving an odd error in the process! How helpful!
+		20
+	params:
+		tmp_dir                     = LOCAL_SCRATCH,
+		outBAMsortingThreadN        = 14,
+		limitIObufferSize           = 150 * 1000000,
+		limitBAMsortRAM             = 190 * 1000000000,
+		outFileNamePrefix           = lambda wildcards, output: output['bam'].replace('STARAligned_sortedByCoord.bam', ''),
+		outFilterMultimapNmax       = 5,
+		alignEndsType               = alignEndsType,
+		outFilterMismatchNoverLmax  = outFilterMismatchNoverLmax,
+		outFilterMatchNminOverLread = 1.00 - outFilterMismatchNoverLmax,
+		alignIntronMax              = 10000,
+		alignMatesGapMax            = 10000,
+		genomeLoad                  = 'NoSharedMemory',
+		fasta                       = FASTA
+	conda:
+		"envs/default.yml",
+	shell:
+		"""
+		TMP_OUT="$(mktemp --directory --dry-run {params.tmp_dir}/tmp.XXXXXXXXXX_STARtmp)"
+
+		function clean_up {{
+		  # Perform program exit housekeeping
+		  if [ ! -z "${{TMP_OUT}}" ] && [ -e "${{TMP_OUT}}" ]; then
+		    rm -rf "${{TMP_OUT}}"
+		  fi
+		  trap 0  # reset to default action
+		  exit
+		}}
+		trap clean_up 0 1 2 3 15 #see 'man signal' for descriptions http://man7.org/linux/man-pages/man7/signal.7.htm
+
+		STAR \
+		  --runMode alignReads \
+		  --outStd BAM_SortedByCoordinate \
+		  --outBAMcompression 0 \
+		  --outTmpDir ${{TMP_OUT}}/ \
+		  --genomeDir ../Hv_genome/{params.fasta}.gz_STAR_index \
+		  --genomeLoad {params.genomeLoad} \
+		  --runThreadN {threads} \
+		  --outBAMsortingThreadN {params.outBAMsortingThreadN} \
+		  --limitIObufferSize {params.limitIObufferSize} \
+		  --limitBAMsortRAM {params.limitBAMsortRAM} \
+		  --readFilesIn {input.R1} {input.R2} \
+		  --readFilesCommand pigz -dcp2 \
+		  --outFileNamePrefix {params.outFileNamePrefix} \
+		  --outSAMtype BAM SortedByCoordinate \
+		  --outFilterMultimapScoreRange 0 \
+		  --outFilterMultimapNmax {params.outFilterMultimapNmax} \
+		  --outFilterMismatchNoverLmax {params.outFilterMismatchNoverLmax} \
+		  --outFilterMatchNminOverLread {params.outFilterMatchNminOverLread} \
+		  --outSJfilterOverhangMin 35 20 20 20 \
+		  --outSJfilterCountTotalMin 10 3 3 3 \
+		  --outSJfilterCountUniqueMin 5 1 1 1 \
+		  --alignEndsType {params.alignEndsType} \
+		  --alignSoftClipAtReferenceEnds No \
+		  --outSAMstrandField intronMotif \
+		  --outSAMattributes All \
+		  --alignIntronMax {params.alignIntronMax} \
+		  --alignMatesGapMax {params.alignMatesGapMax} \
+		  --outSAMattrRGline ID:{output[0]} PL:Illumina PU:Unknown LB:Unknown SM:{wildcards.group}_{wildcards.rep} \
+		| samtools calmd -b --threads {threads} /dev/stdin ../Hv_genome/{params.fasta} \
+		> {output.bam}
+
+		samtools quickcheck -v {output.bam}
+		"""
+
+rule FeatureCounts_gene:
+	input:
+		bam = expand("../3_BAM/{group}_{rep}.STARAligned_sortedByCoord.bam", group = set(GROUPS), rep = set(REPS)),
+		annotations = "../Hv_genome/gene_annotation/Barley_Morex_V2_gene_annotation_PGSB.all.gff3.gz"
+	output:
+		counts = "../4_Counts/GC_GABA_ABA_geneCounts.txt",
+		finalCounts = "../4_Counts/GC_GABA_ABA_geneCounts_final.txt",
+		summary = "../4_Counts/GC_GABA_ABA_geneCounts.txt.summary",
+	conda:
+		"envs/default.yml"
+	shell:
+		"""
+		featureCounts \
+		  -T 4 \
+		  -p \
+		  -a {input.annotations} \
+		  -t gene \
+		  -g ID \
+		  -o {output.counts} {input.bam}
+
+		cut -f1,7- {output.counts} > {output.finalCounts}
+		""" 

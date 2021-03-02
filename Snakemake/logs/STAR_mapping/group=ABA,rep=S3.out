@@ -1,0 +1,53 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 20
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	STAR_mapping
+	1
+
+[Fri Feb 28 13:38:06 2020]
+rule STAR_mapping:
+    input: ../2_Trimmed/ABA_S3_R1_Trimmed.fastq.gz, ../2_Trimmed/ABA_S3_R2_Trimmed.fastq.gz, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/chrLength.txt, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/chrNameLength.txt, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/chrName.txt, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/chrStart.txt, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/SA, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/SAindex, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/Genome, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/genomeParameters.txt
+    output: ../3_BAM/ABA_S3.STARAligned_sortedByCoord.bam, ../3_BAM/ABA_S3.SJ.out.tab
+    log: ../3_BAM/logs/ABA_S3.Log.out, ../3_BAM/logs/ABA_S3.Log.progress.out, ../3_BAM/logs/ABA_S3.Log.final.out, ../3_BAM/logs/ABA_S3.Log.std.out
+    jobid: 0
+    wildcards: group=ABA, rep=S3
+    threads: 20
+    resources: mem_gb=49
+
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+Activating conda environment: /fast/users/a1673472/Hv_RNASeqFromGerman/snakemake/.snakemake/conda/959298bd
+[Fri Feb 28 13:50:22 2020]
+Finished job 0.
+1 of 1 steps (100%) done
+
+===========================================================================
+Phoenix Job Utilisation Reporting
+===========================================================================
+Job Name            : STAR_mapping
+Job ID              : 22421823
+User                : a1673472
+Account             : waite
+Cluster             : phoenix
+Partition           : skylake
+Nodes (List)        : 1 (b1c4n1)
+Cores               : 20
+GPUs                : 0
+State               : COMPLETED
+Submit              : 2020-02-28T13:37:57
+Start               : 2020-02-28T13:38:04
+End                 : 2020-02-28T13:50:25
+Walltime reserved   : 03:00:00
+Walltime elapsed (%): 00:12:21  ( 6.9% * reserved)
+CPU-time elapsed    : 4.12 core-hours
+% CPU used (Total)  : 15.32%    (0.63 core-hours)
+% User CPU (Compute): 13.99%    (0.58 core-hours)
+% System CPU (I/O)  :  1.33%    (0.05 core-hours)
+Mem reserved        : 49G/node
+% Mem used (Max)    : 88.33%    (43.28G/node) 
+Max Disk Write      : 43.97G    (b1c4n1)
+Max Disk Read       : 96.86G    (b1c4n1)
+===========================================================================

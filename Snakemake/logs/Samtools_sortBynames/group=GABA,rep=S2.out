@@ -1,0 +1,51 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	Samtools_sortBynames
+	1
+
+[Wed Mar 25 01:23:27 2020]
+rule Samtools_sortBynames:
+    input: ../3_BAM/GABA_S2.STARAligned_sortedByCoord.bam
+    output: ../3_BAM/GABA_S2.STARAligned_sortedByName.bam
+    jobid: 0
+    wildcards: group=GABA, rep=S2
+
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+Activating conda environment: /fast/users/a1673472/Hv_RNASeqFromGerman/snakemake/.snakemake/conda/959298bd
+[bam_sort_core] merging from 42 files and 1 in-memory blocks...
+[Wed Mar 25 01:46:29 2020]
+Finished job 0.
+1 of 1 steps (100%) done
+
+===========================================================================
+Phoenix Job Utilisation Reporting
+===========================================================================
+Job Name            : Samtools_sortBynames
+Job ID              : 22626152
+User                : a1673472
+Account             : waite
+Cluster             : phoenix
+Partition           : cpu
+Nodes (List)        : 1 (r3n29)
+Cores               : 1
+GPUs                : 0
+State               : COMPLETED
+Submit              : 2020-03-25T01:21:18
+Start               : 2020-03-25T01:23:24
+End                 : 2020-03-25T01:46:29
+Walltime reserved   : 00:30:00
+Walltime elapsed (%): 00:23:05  (76.9% * reserved)
+CPU-time elapsed    : 0.38 core-hours
+% CPU used (Total)  : 99.47%    (0.38 core-hours)
+% User CPU (Compute): 96.00%    (0.37 core-hours)
+% System CPU (I/O)  :  3.47%    (0.01 core-hours)
+Mem reserved        : 1G/node
+% Mem used (Max)    : 84.89%    (869.31M/node) 
+Max Disk Write      : 12.66G    (r3n29)
+Max Disk Read       : 9.51G     (r3n29)
+===========================================================================

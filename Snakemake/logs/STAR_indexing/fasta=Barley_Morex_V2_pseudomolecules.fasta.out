@@ -1,0 +1,64 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 24
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	STAR_indexing
+	1
+
+[Fri Feb 21 16:03:41 2020]
+rule STAR_indexing:
+    input: ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/NumberOfReferences, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/GenomeLength
+    output: ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/chrLength.txt, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/chrNameLength.txt, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/chrName.txt, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/chrStart.txt, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/SA, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/SAindex, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/Genome, ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta.gz_STAR_index/genomeParameters.txt
+    jobid: 0
+    wildcards: fasta=Barley_Morex_V2_pseudomolecules.fasta
+    threads: 24
+    resources: mem_gb=10
+
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+Activating conda environment: /fast/users/a1673472/Hv_RNASeqFromGerman/snakemake/.snakemake/conda/959298bd
+Feb 21 16:03:42 ..... started STAR run
+Feb 21 16:03:42 ... starting to generate Genome files
+Feb 21 16:05:05 ... starting to sort Suffix Array. This may take a long time...
+Feb 21 16:05:26 ... sorting Suffix Array chunks and saving them to disk...
+Feb 21 16:16:02 ... loading chunks from disk, packing SA...
+Feb 21 16:19:20 ... finished generating suffix array
+Feb 21 16:19:21 ... generating Suffix Array index
+Feb 21 16:23:13 ... completed Suffix Array index
+Feb 21 16:23:13 ... writing Genome to disk ...
+Feb 21 16:23:24 ... writing Suffix Array to disk ...
+Feb 21 16:26:42 ... writing SAindex to disk
+Feb 21 16:26:45 ..... finished successfully
+[Fri Feb 21 16:26:46 2020]
+Finished job 0.
+1 of 1 steps (100%) done
+
+===========================================================================
+Phoenix Job Utilisation Reporting
+===========================================================================
+Job Name            : STAR_indexing
+Job ID              : 22311940
+User                : a1673472
+Account             : waite
+Cluster             : phoenix
+Partition           : skylake
+Nodes (List)        : 1 (p2n13)
+Cores               : 24
+GPUs                : 0
+State               : COMPLETED
+Submit              : 2020-02-21T15:57:34
+Start               : 2020-02-21T16:03:27
+End                 : 2020-02-21T16:26:47
+Walltime reserved   : 05:00:00
+Walltime elapsed (%): 00:23:20  ( 7.8% * reserved)
+CPU-time elapsed    : 9.33 core-hours
+% CPU used (Total)  : 36.68%    (3.42 core-hours)
+% User CPU (Compute): 35.82%    (3.34 core-hours)
+% System CPU (I/O)  :  0.85%    (0.08 core-hours)
+Mem reserved        : 10G/node
+% Mem used (Max)    : 1024.87%    (102.49G/node) 
+Max Disk Write      : 99.00G    (p2n13)
+Max Disk Read       : 71.06G    (p2n13)
+===========================================================================

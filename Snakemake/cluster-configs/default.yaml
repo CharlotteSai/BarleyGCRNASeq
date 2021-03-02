@@ -1,0 +1,46 @@
+__default__ :
+        job-name      : "{rule}"
+        output        : "logs/{rule}/{wildcards}.out"
+        ntasks        : 1
+        cpus-per-task : 1
+        mem           : "200M"
+        time          : "00-00:05:00"
+        account       : "my_account"
+        partition     : "my_partition"
+
+# Override the above defaults with job specific values
+fastqc_raw :
+        mem           : "500M"
+        time          : "00-00:10:00"
+
+Trimmatic:
+        mem           : "300M"
+        time          : "00-02:00:00"
+
+fastq_trimmed:
+        mem           : "500M"
+        time          : "00-00:10:00"
+
+STAR_indexing:
+        mem           : "{resources.mem_gb}G"
+        cpus-per-task : 24
+        time          : "00-00:30:00"
+
+STAR_mapping:
+        mem           : "{resources.mem_gb}G"
+        cpus-per-task : 20
+        time          : "00-00:20:00"
+
+Samtools_sortBynames:
+        time          : "00-00:30:00"
+        mem           : "1G"
+
+FeatureCounts_gene:
+        time          : "00-01:00:00"
+        mem           : "500M"
+
+# Job specific resource requirements can be passed from the rule, in the Snakefile, via the "resources" keyword
+#bwa_mem :
+#        cpus-per-task : 4
+#        mem           : "{resources.mem_mb}M"
+#        time          : "00-{resources.time_hrs}:00:00"

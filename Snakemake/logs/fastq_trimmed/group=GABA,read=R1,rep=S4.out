@@ -1,0 +1,71 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	fastq_trimmed
+	1
+
+[Thu Feb 20 00:26:10 2020]
+rule fastq_trimmed:
+    input: ../2_Trimmed/GABA_S4_R1_Trimmed.fastq.gz
+    output: ../1_FastQC/Trimmed/GABA_S4_R1_Trimmed_fastqc.zip, ../1_FastQC/Trimmed/GABA_S4_R1_Trimmed_fastqc.html
+    jobid: 0
+    wildcards: group=GABA, rep=S4, read=R1
+
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+Activating conda environment: /fast/users/a1673472/Hv_RNASeqFromGerman/snakemake/.snakemake/conda/959298bd
+Started analysis of GABA_S4_R1_Trimmed.fastq.gz
+Approx 5% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 10% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 15% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 20% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 25% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 30% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 35% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 40% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 45% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 50% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 55% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 60% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 65% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 70% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 75% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 80% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 85% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 90% complete for GABA_S4_R1_Trimmed.fastq.gz
+Approx 95% complete for GABA_S4_R1_Trimmed.fastq.gz
+Analysis complete for GABA_S4_R1_Trimmed.fastq.gz
+[Thu Feb 20 00:31:57 2020]
+Finished job 0.
+1 of 1 steps (100%) done
+
+===========================================================================
+Phoenix Job Utilisation Reporting
+===========================================================================
+Job Name            : fastq_trimmed
+Job ID              : 22261437
+User                : a1673472
+Account             : waite
+Cluster             : phoenix
+Partition           : cpu
+Nodes (List)        : 1 (r1n03)
+Cores               : 1
+GPUs                : 0
+State               : COMPLETED
+Submit              : 2020-02-20T00:26:06
+Start               : 2020-02-20T00:26:08
+End                 : 2020-02-20T00:31:57
+Walltime reserved   : 00:10:00
+Walltime elapsed (%): 00:05:49  (58.2% * reserved)
+CPU-time elapsed    : 0.10 core-hours
+% CPU used (Total)  : 98.68%    (0.10 core-hours)
+% User CPU (Compute): 95.84%    (0.09 core-hours)
+% System CPU (I/O)  :  2.85%    (0.00 core-hours)
+Mem reserved        : 500M/node
+% Mem used (Max)    : 40.38%    (201.91M/node) 
+Max Disk Write      : 20.48K    (r1n03)
+Max Disk Read       : 2.04G     (r1n03)
+===========================================================================

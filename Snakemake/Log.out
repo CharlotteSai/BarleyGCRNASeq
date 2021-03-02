@@ -1,0 +1,88 @@
+STAR version=2.7.3a
+STAR compilation time,server,dir=Tue Oct 8 14:26:19 EDT 2019 vega:/home/dobin/data/STAR/STARcode/STAR.master/source
+##### Command Line:
+STAR --runMode genomeGenerate --outTmpDir ./local_scrach/tmp.kDNoIjbs0K_STARtmp --genomeDir ./local_scrach/tmp.Dzf2upX8PL_STAR_index --genomeChrBinNbits 18 --genomeSAindexNbases 14 --genomeFastaFiles ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta --limitGenomeGenerateRAM 320000000000 --runThreadN 24
+##### Initial USER parameters from Command Line:
+outTmpDir                         ./local_scrach/tmp.kDNoIjbs0K_STARtmp
+###### All USER parameters from Command Line:
+runMode                       genomeGenerate     ~RE-DEFINED
+outTmpDir                     ./local_scrach/tmp.kDNoIjbs0K_STARtmp     ~RE-DEFINED
+genomeDir                     ./local_scrach/tmp.Dzf2upX8PL_STAR_index     ~RE-DEFINED
+genomeChrBinNbits             18     ~RE-DEFINED
+genomeSAindexNbases           14     ~RE-DEFINED
+genomeFastaFiles              ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta        ~RE-DEFINED
+limitGenomeGenerateRAM        320000000000     ~RE-DEFINED
+runThreadN                    24     ~RE-DEFINED
+##### Finished reading parameters from all sources
+
+##### Final user re-defined parameters-----------------:
+runMode                           genomeGenerate
+runThreadN                        24
+genomeDir                         ./local_scrach/tmp.Dzf2upX8PL_STAR_index
+genomeFastaFiles                  ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta   
+genomeSAindexNbases               14
+genomeChrBinNbits                 18
+limitGenomeGenerateRAM            320000000000
+outTmpDir                         ./local_scrach/tmp.kDNoIjbs0K_STARtmp
+
+-------------------------------
+##### Final effective command line:
+STAR   --runMode genomeGenerate   --runThreadN 24   --genomeDir ./local_scrach/tmp.Dzf2upX8PL_STAR_index   --genomeFastaFiles ../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta      --genomeSAindexNbases 14   --genomeChrBinNbits 18   --limitGenomeGenerateRAM 320000000000   --outTmpDir ./local_scrach/tmp.kDNoIjbs0K_STARtmp
+----------------------------------------
+
+Finished loading and checking parameters
+Feb 21 16:03:42 ... starting to generate Genome files
+../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta : chr # 0  "chr1H" chrStart: 0
+../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta : chr # 1  "chr2H" chrStart: 522715136
+../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta : chr # 2  "chr3H" chrStart: 1198260224
+../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta : chr # 3  "chr4H" chrStart: 1827143680
+../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta : chr # 4  "chr5H" chrStart: 2451570688
+../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta : chr # 5  "chr6H" chrStart: 3050831872
+../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta : chr # 6  "chr7H" chrStart: 3624140800
+../Hv_genome/Barley_Morex_V2_pseudomolecules.fasta : chr # 7  "chrUn" chrStart: 4259053568
+Estimated genome size=4545250368   4344250368   201000000
+GstrandBit=33
+Number of SA indices: 8449681038
+Feb 21 16:05:05 ... starting to sort Suffix Array. This may take a long time...
+Number of chunks: 25;   chunks size limit: 2939019488 bytes
+Feb 21 16:05:26 ... sorting Suffix Array chunks and saving them to disk...
+Writing 2690110800 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_23 ; empty space on disk = 95532870275072 bytes ... done
+Writing 2717108848 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_22 ; empty space on disk = 95527195750400 bytes ... done
+Writing 2761450304 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_19 ; empty space on disk = 95521754251264 bytes ...Writing 2783236976 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_14 ; empty space on disk = 95520142819328 bytes ... done
+Writing 2889610048 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_18 ; empty space on disk = 95511405330432 bytes ... done
+Writing 2773317088 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_7 ; empty space on disk = 95509266767872 bytes ... done
+Writing 2701139512 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_1 ; empty space on disk = 95509249839104 bytes ...Writing 2834008576 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_8 ; empty space on disk = 95509249839104 bytes ...Writing 2829583952 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_12 ; empty space on disk = 95504652550144 bytes ... done
+ done
+ done
+Writing 2784973920 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_6 ; empty space on disk = 95494473797632 bytes ...Writing 2828324688 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_15 ; empty space on disk = 95495299514368 bytes ... done
+Writing 2930348688 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_17 ; empty space on disk = 95492171268096 bytes ...Writing 2934025120 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_9 ; empty space on disk = 95492171268096 bytes ... done
+ done
+ done
+ done
+Writing 2633014912 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_20 ; empty space on disk = 95480344498176 bytes ...Writing 2698345296 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_2 ; empty space on disk = 95477439959040 bytes ... done
+Writing 2587337912 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_11 ; empty space on disk = 95474622357504 bytes ...Writing 2664783384 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_5 ; empty space on disk = 95471134478336 bytes ... done
+ done
+ done
+Writing 2718646632 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_10 ; empty space on disk = 95468425326592 bytes ...Writing 2911731840 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_0 ; empty space on disk = 95466989535232 bytes ... done
+ done
+Writing 2734985872 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_13 ; empty space on disk = 95460578148352 bytes ...Writing 2865741384 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_16 ; empty space on disk = 95459095748608 bytes ...Writing 2882809256 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_4 ; empty space on disk = 95459095748608 bytes ... done
+Writing 2916640032 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_21 ; empty space on disk = 95448895279104 bytes ... done
+Writing 2922135416 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_3 ; empty space on disk = 95445467570176 bytes ... done
+ done
+ done
+Writing 604037848 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA_24 ; empty space on disk = 95431860981760 bytes ... done
+Feb 21 16:16:02 ... loading chunks from disk, packing SA...
+Feb 21 16:19:20 ... finished generating suffix array
+Feb 21 16:19:21 ... generating Suffix Array index
+Feb 21 16:23:13 ... completed Suffix Array index
+Feb 21 16:23:13 ... writing Genome to disk ...
+Writing 4344250368 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/Genome ; empty space on disk = 95406548758528 bytes ... done
+SA size in bytes: 35911144415
+Feb 21 16:23:24 ... writing Suffix Array to disk ...
+Writing 35911144415 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SA ; empty space on disk = 95398441373696 bytes ... done
+Feb 21 16:26:42 ... writing SAindex to disk
+Writing 8 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SAindex ; empty space on disk = 95314719944704 bytes ... done
+Writing 120 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SAindex ; empty space on disk = 95314719944704 bytes ... done
+Writing 1610612733 bytes into ./local_scrach/tmp.Dzf2upX8PL_STAR_index/SAindex ; empty space on disk = 95314719944704 bytes ... done
+Feb 21 16:26:45 ..... finished successfully
+DONE: Genome generation, EXITING

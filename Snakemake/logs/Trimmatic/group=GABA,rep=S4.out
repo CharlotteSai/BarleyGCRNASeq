@@ -1,0 +1,72 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	Trimmatic
+	1
+
+[Wed Feb 19 22:40:52 2020]
+rule Trimmatic:
+    input: ../0_fastq/GABA_S4_R1.fastq.gz, ../0_fastq/GABA_S4_R2.fastq.gz, Illumina_adaptors_PE.fa
+    output: ../2_Trimmed/GABA_S4_R1_Trimmed.fastq.gz, ../2_Trimmed/GABA_S4_R1_unpaired.fastq.gz, ../2_Trimmed/GABA_S4_R2_Trimmed.fastq.gz, ../2_Trimmed/GABA_S4_R2_unpaired.fastq.gz
+    jobid: 0
+    wildcards: group=GABA, rep=S4
+
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+Activating conda environment: /fast/users/a1673472/Hv_RNASeqFromGerman/snakemake/.snakemake/conda/959298bd
+TrimmomaticPE: Started with arguments:
+ -threads 1 ../0_fastq/GABA_S4_R1.fastq.gz ../0_fastq/GABA_S4_R2.fastq.gz ../2_Trimmed/GABA_S4_R1_Trimmed.fastq.gz ../2_Trimmed/GABA_S4_R1_unpaired.fastq.gz ../2_Trimmed/GABA_S4_R2_Trimmed.fastq.gz ../2_Trimmed/GABA_S4_R2_unpaired.fastq.gz ILLUMINACLIP:Illumina_adaptors_PE.fa:2:30:10:3:true LEADING:2 TRAILING:2 SLIDINGWINDOW:4:15 MINLEN:70
+Using PrefixPair: 'AGATGTGTATAAGAGACAG' and 'AGATGTGTATAAGAGACAG'
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG'
+Using Long Clipping Sequence: 'TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATCTCGTATGCCGTCTTCTGCTTG'
+Using Long Clipping Sequence: 'TTTTTTTTTTAATGATACGGCGACCACCGAGATCTACAC'
+Using Long Clipping Sequence: 'TTTTTTTTTTCAAGCAGAAGACGGCATACGA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'CTGTCTCTTATACACATCTCCGAGCCCACGAGAC'
+Using Long Clipping Sequence: 'CAAGCAGAAGACGGCATACGAGATCGGTCTCGGCATTCCTGCTGAACCGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'CTGTCTCTTATACACATCTGACGCTGCCGACGA'
+Using Long Clipping Sequence: 'AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 2 prefix pairs, 14 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Quality encoding detected as phred33
+Input Read Pairs: 57362049 Both Surviving: 54015068 (94.17%) Forward Only Surviving: 2425123 (4.23%) Reverse Only Surviving: 490348 (0.85%) Dropped: 431510 (0.75%)
+TrimmomaticPE: Completed successfully
+[Thu Feb 20 00:07:43 2020]
+Finished job 0.
+1 of 1 steps (100%) done
+
+===========================================================================
+Phoenix Job Utilisation Reporting
+===========================================================================
+Job Name            : Trimmatic
+Job ID              : 22258420
+User                : a1673472
+Account             : waite
+Cluster             : phoenix
+Partition           : cpu
+Nodes (List)        : 1 (r1n10)
+Cores               : 1
+GPUs                : 0
+State               : COMPLETED
+Submit              : 2020-02-19T22:40:47
+Start               : 2020-02-19T22:40:50
+End                 : 2020-02-20T00:07:44
+Walltime reserved   : 03:00:00
+Walltime elapsed (%): 01:26:54  (48.3% * reserved)
+CPU-time elapsed    : 1.45 core-hours
+% CPU used (Total)  : 97.56%    (1.41 core-hours)
+% User CPU (Compute): 94.84%    (1.37 core-hours)
+% System CPU (I/O)  :  2.73%    (0.04 core-hours)
+Mem reserved        : 300M/node
+% Mem used (Max)    : 68.45%    (205.35M/node) 
+Max Disk Write      : 4.26G     (r1n10)
+Max Disk Read       : 4.48G     (r1n10)
+===========================================================================

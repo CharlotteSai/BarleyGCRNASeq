@@ -1,0 +1,272 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	FeatureCounts_gene
+	1
+
+[Wed Mar 25 01:54:15 2020]
+rule FeatureCounts_gene:
+    input: ../3_BAM/GABA_S3.STARAligned_sortedByName.bam, ../3_BAM/GABA_S2.STARAligned_sortedByName.bam, ../3_BAM/GABA_S4.STARAligned_sortedByName.bam, ../3_BAM/GABA_S1.STARAligned_sortedByName.bam, ../3_BAM/Kont_S3.STARAligned_sortedByName.bam, ../3_BAM/Kont_S2.STARAligned_sortedByName.bam, ../3_BAM/Kont_S4.STARAligned_sortedByName.bam, ../3_BAM/Kont_S1.STARAligned_sortedByName.bam, ../3_BAM/ABA_S3.STARAligned_sortedByName.bam, ../3_BAM/ABA_S2.STARAligned_sortedByName.bam, ../3_BAM/ABA_S4.STARAligned_sortedByName.bam, ../3_BAM/ABA_S1.STARAligned_sortedByName.bam, ../Hv_genome/gene_annotation/Barley_Morex_V2_gene_annotation_PGSB.all.gff3.gz
+    output: ../4_Counts/GC_GABA_ABA_geneCounts.txt, ../4_Counts/GC_GABA_ABA_geneCounts_final.txt, ../4_Counts/GC_GABA_ABA_geneCounts.txt.summary
+    jobid: 0
+
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+Activating conda environment: /fast/users/a1673472/Hv_RNASeqFromGerman/snakemake/.snakemake/conda/959298bd
+
+        ==========     _____ _    _ ____  _____  ______          _____  
+        =====         / ____| |  | |  _ \|  __ \|  ____|   /\   |  __ \ 
+          =====      | (___ | |  | | |_) | |__) | |__     /  \  | |  | |
+            ====      \___ \| |  | |  _ <|  _  /|  __|   / /\ \ | |  | |
+              ====    ____) | |__| | |_) | | \ \| |____ / ____ \| |__| |
+        ==========   |_____/ \____/|____/|_|  \_\______/_/    \_\_____/
+	  v1.6.4
+
+//========================== featureCounts setting ===========================\\
+||                                                                            ||
+||             Input files : 12 BAM files                                     ||
+||                           P GABA_S3.STARAligned_sortedByName.bam           ||
+||                           P GABA_S2.STARAligned_sortedByName.bam           ||
+||                           P GABA_S4.STARAligned_sortedByName.bam           ||
+||                           P GABA_S1.STARAligned_sortedByName.bam           ||
+||                           P Kont_S3.STARAligned_sortedByName.bam           ||
+||                           P Kont_S2.STARAligned_sortedByName.bam           ||
+||                           P Kont_S4.STARAligned_sortedByName.bam           ||
+||                           P Kont_S1.STARAligned_sortedByName.bam           ||
+||                           P ABA_S3.STARAligned_sortedByName.bam            ||
+||                           P ABA_S2.STARAligned_sortedByName.bam            ||
+||                           P ABA_S4.STARAligned_sortedByName.bam            ||
+||                           P ABA_S1.STARAligned_sortedByName.bam            ||
+||                                                                            ||
+||             Output file : GC_GABA_ABA_geneCounts.txt                       ||
+||                 Summary : GC_GABA_ABA_geneCounts.txt.summary               ||
+||              Annotation : Barley_Morex_V2_gene_annotation_PGSB.all.gff ... ||
+||      Dir for temp files : ../4_Counts                                      ||
+||                                                                            ||
+||                 Threads : 4                                                ||
+||                   Level : meta-feature level                               ||
+||              Paired-end : yes                                              ||
+||      Multimapping reads : not counted                                      ||
+|| Multi-overlapping reads : not counted                                      ||
+||   Min overlapping bases : 1                                                ||
+||                                                                            ||
+||          Chimeric reads : counted                                          ||
+||        Both ends mapped : not required                                     ||
+||                                                                            ||
+\\============================================================================//
+
+//================================= Running ==================================\\
+||                                                                            ||
+|| Load annotation file Barley_Morex_V2_gene_annotation_PGSB.all.gff3.gz ...  ||
+||    Features : 63658                                                        ||
+||    Meta-features : 63658                                                   ||
+||    Chromosomes/contigs : 8                                                 ||
+||                                                                            ||
+|| Process BAM file GABA_S3.STARAligned_sortedByName.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 38695261                                             ||
+||    Successfully assigned alignments : 28523898 (73.7%)                     ||
+||    Running time : 2.22 minutes                                             ||
+||                                                                            ||
+|| Process BAM file GABA_S2.STARAligned_sortedByName.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 50650897                                             ||
+||    Successfully assigned alignments : 38867293 (76.7%)                     ||
+||    Running time : 2.97 minutes                                             ||
+||                                                                            ||
+|| Process BAM file GABA_S4.STARAligned_sortedByName.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 47115463                                             ||
+||    Successfully assigned alignments : 36380860 (77.2%)                     ||
+||    Running time : 2.82 minutes                                             ||
+||                                                                            ||
+|| Process BAM file GABA_S1.STARAligned_sortedByName.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 38989321                                             ||
+||    Successfully assigned alignments : 29003464 (74.4%)                     ||
+||    Running time : 2.29 minutes                                             ||
+||                                                                            ||
+|| Process BAM file Kont_S3.STARAligned_sortedByName.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 40531885                                             ||
+||    Successfully assigned alignments : 29430534 (72.6%)                     ||
+||    Running time : 2.32 minutes                                             ||
+||                                                                            ||
+|| Process BAM file Kont_S2.STARAligned_sortedByName.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 23730331                                             ||
+||    Successfully assigned alignments : 12804800 (54.0%)                     ||
+||    Running time : 1.49 minutes                                             ||
+||                                                                            ||
+|| Process BAM file Kont_S4.STARAligned_sortedByName.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 40489127                                             ||
+||    Successfully assigned alignments : 30534198 (75.4%)                     ||
+||    Running time : 2.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file Kont_S1.STARAligned_sortedByName.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 33690888                                             ||
+||    Successfully assigned alignments : 23973200 (71.2%)                     ||
+||    Running time : 2.04 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ABA_S3.STARAligned_sortedByName.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 25235275                                             ||
+||    Successfully assigned alignments : 18159384 (72.0%)                     ||
+||    Running time : 1.45 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ABA_S2.STARAligned_sortedByName.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 32855660                                             ||
+||    Successfully assigned alignments : 24656842 (75.0%)                     ||
+||    Running time : 1.96 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ABA_S4.STARAligned_sortedByName.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 39804938                                             ||
+||    Successfully assigned alignments : 29900478 (75.1%)                     ||
+||    Running time : 2.35 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ABA_S1.STARAligned_sortedByName.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Assign alignments (paired-end) to features...                           ||
+||                                                                            ||
+||    WARNING: reads from the same pair were found not adjacent to each       ||
+||             other in the input (due to read sorting by location or         ||
+||             reporting of multi-mapping read pairs).                        ||
+||                                                                            ||
+||    Pairing up the read pairs.                                              ||
+||                                                                            ||
+||    Total alignments : 40791708                                             ||
+||    Successfully assigned alignments : 29269398 (71.8%)                     ||
+||    Running time : 2.25 minutes                                             ||
+||                                                                            ||
+||                                                                            ||
+|| Summary of counting results can be found in file "../4_Counts/GC_GABA_ABA  ||
+|| _geneCounts.txt.summary"                                                   ||
+||                                                                            ||
+\\============================================================================//
+
+[Wed Mar 25 02:20:44 2020]
+Finished job 0.
+1 of 1 steps (100%) done
+
+===========================================================================
+Phoenix Job Utilisation Reporting
+===========================================================================
+Job Name            : FeatureCounts_gene
+Job ID              : 22626176
+User                : a1673472
+Account             : waite
+Cluster             : phoenix
+Partition           : cpu
+Nodes (List)        : 1 (r1n36)
+Cores               : 1
+GPUs                : 0
+State               : COMPLETED
+Submit              : 2020-03-25T01:51:47
+Start               : 2020-03-25T01:54:11
+End                 : 2020-03-25T02:20:45
+Walltime reserved   : 01:00:00
+Walltime elapsed (%): 00:26:34  (44.3% * reserved)
+CPU-time elapsed    : 0.44 core-hours
+% CPU used (Total)  : 99.45%    (0.44 core-hours)
+% User CPU (Compute): 96.54%    (0.43 core-hours)
+% System CPU (I/O)  :  2.91%    (0.01 core-hours)
+Mem reserved        : 500M/node
+% Mem used (Max)    : 20.23%    (101.13M/node) 
+Max Disk Write      : 8.60M     (r1n36)
+Max Disk Read       : 56.13G    (r1n36)
+===========================================================================

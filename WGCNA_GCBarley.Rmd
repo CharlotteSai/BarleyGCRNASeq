@@ -283,12 +283,13 @@ ggplot2::ggplot(dataM,aes(x=Treatment,y=Sample,fill=Correlation)) +
                                     angle = 45,
                                     vjust = 0.5),
         axis.title.x = element_blank(),
-        axis.title.y = element_blank())
+        axis.title.y = element_blank(),
+        panel.background = element_blank())
 
 # Pairwise scatterplots of module eigengenes and treatment
-plotMEpairs(MEs,y = meta.datExpr["ABA"]) # ABA
+plotMEpairs(MEs,y = meta.datExpr[["ABA"]]) # ABA
 
-plotMEpairs(MEs,y = meta.datExpr["GABA"]) # GABA
+plotMEpairs(MEs,y = meta.datExpr[["GABA"]]) # GABA
 ```
 
 

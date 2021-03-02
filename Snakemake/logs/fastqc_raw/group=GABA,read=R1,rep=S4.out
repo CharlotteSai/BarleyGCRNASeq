@@ -1,0 +1,71 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	fastqc_raw
+	1
+
+[Tue Feb 18 14:59:06 2020]
+rule fastqc_raw:
+    input: ../0_fastq/GABA_S4_R1.fastq.gz
+    output: ../1_FastQC/Raw/GABA_S4_R1_fastqc.zip, ../1_FastQC/Raw/GABA_S4_R1_fastqc.html
+    jobid: 0
+    wildcards: group=GABA, rep=S4, read=R1
+
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+WARNING: The conda.compat module is deprecated and will be removed in a future release.
+Activating conda environment: /fast/users/a1673472/Hv_RNASeqFromGerman/snakemake/.snakemake/conda/959298bd
+Started analysis of GABA_S4_R1.fastq.gz
+Approx 5% complete for GABA_S4_R1.fastq.gz
+Approx 10% complete for GABA_S4_R1.fastq.gz
+Approx 15% complete for GABA_S4_R1.fastq.gz
+Approx 20% complete for GABA_S4_R1.fastq.gz
+Approx 25% complete for GABA_S4_R1.fastq.gz
+Approx 30% complete for GABA_S4_R1.fastq.gz
+Approx 35% complete for GABA_S4_R1.fastq.gz
+Approx 40% complete for GABA_S4_R1.fastq.gz
+Approx 45% complete for GABA_S4_R1.fastq.gz
+Approx 50% complete for GABA_S4_R1.fastq.gz
+Approx 55% complete for GABA_S4_R1.fastq.gz
+Approx 60% complete for GABA_S4_R1.fastq.gz
+Approx 65% complete for GABA_S4_R1.fastq.gz
+Approx 70% complete for GABA_S4_R1.fastq.gz
+Approx 75% complete for GABA_S4_R1.fastq.gz
+Approx 80% complete for GABA_S4_R1.fastq.gz
+Approx 85% complete for GABA_S4_R1.fastq.gz
+Approx 90% complete for GABA_S4_R1.fastq.gz
+Approx 95% complete for GABA_S4_R1.fastq.gz
+Analysis complete for GABA_S4_R1.fastq.gz
+[Tue Feb 18 15:05:12 2020]
+Finished job 0.
+1 of 1 steps (100%) done
+
+===========================================================================
+Phoenix Job Utilisation Reporting
+===========================================================================
+Job Name            : fastqc_raw
+Job ID              : 22205178
+User                : a1673472
+Account             : waite
+Cluster             : phoenix
+Partition           : cpu
+Nodes (List)        : 1 (r3n32)
+Cores               : 1
+GPUs                : 0
+State               : COMPLETED
+Submit              : 2020-02-18T14:57:43
+Start               : 2020-02-18T14:58:59
+End                 : 2020-02-18T15:05:12
+Walltime reserved   : 00:15:00
+Walltime elapsed (%): 00:06:13  (41.4% * reserved)
+CPU-time elapsed    : 0.10 core-hours
+% CPU used (Total)  : 93.43%    (0.10 core-hours)
+% User CPU (Compute): 91.06%    (0.09 core-hours)
+% System CPU (I/O)  :  2.37%    (0.00 core-hours)
+Mem reserved        : 200M/node
+% Mem used (Max)    : 102.80%    (205.59M/node) 
+Max Disk Write      : 20.48K    (r3n32)
+Max Disk Read       : 2.23G     (r3n32)
+===========================================================================
