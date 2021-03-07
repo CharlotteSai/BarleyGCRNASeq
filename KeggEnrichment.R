@@ -2,7 +2,7 @@ library(KEGGREST)
 library(tidyverse)
 library(magrittr)
 library(tibble)
-
+# based on some info from https://ucdavis-bioinformatics-training.github.io/2018-June-RNA-Seq-Workshop/friday/enrichment.html
 
 # load Hv-At homolog genes and make trans id to gene id
 AtHomo <- read_csv("BarleyAnnos/Barley_Arabidopsis_Homolog.csv") %>% 
@@ -63,7 +63,7 @@ gene2pathway <- lapply(names(pathway2gene), function(x){
   split(f = .$Gene) %>% 
   lapply(function(x){
     x[["pathwayID"]]
-  }) # 5106
+  }) # 5109
 
 #DE genes enrich kegg
 #--------- DE gene summary ----------#
@@ -121,6 +121,7 @@ keggRes <- AtDEs %>%
       }) %>%
       bind_rows() %>%
       left_join(keggSummary, by = "keggID") %>%
+      # filter(DECount > Expected) %>% 
       dplyr::select(keggID, Description, DECount, Expected, everything())
   })
 
@@ -157,7 +158,7 @@ mapdata <- keggHeat %>%
 label <- keggHeat$Description 
 names(label) <- keggHeat$keggID
 
-myColor <- colorspace::sequential_hcl(30, "Purples 2") %>% rev()
+# myColor <- colorspace::sequential_hcl(30, "Purples 2") %>% rev()
 myColor <- colorRampPalette(c("white", "#511B54"))(30)
 pheatmap::pheatmap(mat = mapdata,
                    cluster_cols = FALSE,
@@ -174,14 +175,14 @@ keggFinal <- keggResfilter%>%
   split(f = .$Group)
 
 
-# clusterprofiler results
-KEGGRes <- AtDEs %>%
-  lapply(function(des){
-    clusterProfiler:: enrichKEGG(des, organism = "ath",
-               pAdjustMethod = "fdr")
-  })
-
-KEGGRes[["ABAde"]]@result %>% 
-  filter(p.adjust <= 0.05)
-KEGGRes[["GABAde"]]@result %>% 
-  filter(p.adjust <= 0.05)
+# # clusterprofiler results
+# KEGGRes <- AtDEs %>%
+#   lapply(function(des){
+#     clusterProfiler:: enrichKEGG(des, organism = "ath",
+#                pAdjustMethod = "fdr")
+#   })
+# 
+# KEGGRes[["ABAde"]]@result %>% 
+#   filter(p.adjust <= 0.05)
+# KEGGRes[["GABAde"]]@result %>% 
+#   filter(p.adjust <= 0.05)

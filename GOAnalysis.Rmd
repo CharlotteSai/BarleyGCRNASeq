@@ -190,15 +190,19 @@ goHeat %<>%
       mutate_all(~replace(., is.na(.), 0)) 
 mapdata <- goHeat %>% 
   dplyr::select(ABA,GABA) %>% 
-  set_rownames(seq(1:length(.$ABA)))
+  set_rownames(rownames(goHeat))
 Annos <- goHeat %>% 
   dplyr::select(ontology) %>% 
-  set_rownames(seq(1:length(.$ontology)))
+  set_rownames(rownames(goHeat))
+GOnames <- goHeat$GO_term 
+names(GOnames) <- rownames(goHeat)
 
+# GO:0016301 and GO:0016773 present in both enrichment
 pheatmap::pheatmap(mat = mapdata,
                    cluster_cols = FALSE,
                    annotation_row = Annos,
-                   show_rownames = FALSE,
+                   labels_row = GOnames,
+                   # show_rownames = FALSE,
                    breaks = myBreaks,
                    color = myColor
 )  
