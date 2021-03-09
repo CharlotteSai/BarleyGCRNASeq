@@ -121,7 +121,7 @@ keggRes <- AtDEs %>%
       }) %>%
       bind_rows() %>%
       left_join(keggSummary, by = "keggID") %>%
-      # filter(DECount > Expected) %>% 
+      filter(DECount > Expected) %>%
       dplyr::select(keggID, Description, DECount, Expected, everything())
   })
 
@@ -162,7 +162,7 @@ names(label) <- keggHeat$keggID
 myColor <- colorRampPalette(c("white", "#511B54"))(30)
 pheatmap::pheatmap(mat = mapdata,
                    cluster_cols = FALSE,
-                   # labels_row = label
+                   # labels_row = label,
                    # show_rownames = FALSE,
                    # breaks = myBreaks,
                    color = myColor

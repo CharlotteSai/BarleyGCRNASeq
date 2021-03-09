@@ -203,17 +203,17 @@ patternDE <- merge(ABAtags,
 # same direction
 patternDE %>% 
   filter((ABA == 1 & GABA == 1) | (ABA == -1 & GABA == -1)) %>% 
-  row.names() # 448
+  row.names() # 428
 
 # opposite direction
 patternDE %>% 
   filter((ABA == 1 & GABA == -1) | (ABA == -1 & GABA == 1)) %>% 
-  row.names() # 128
+  row.names() # 111
 
 # heatmap of gene Exp pattern
 patternDE %>% 
   dplyr::select(-contains("logFC")) %>% 
-  pheatmap(cluster_cols = FALSE,
+  pheatmap::pheatmap(cluster_cols = FALSE,
            show_rownames = FALSE) -> testplot
 
 # give order to heatmap with logFC
@@ -221,16 +221,26 @@ ordering <- tibble(rowNum = testplot$tree_row$order,
                    order = seq(1, length(rowNum))) %>% 
   arrange(rowNum)
 
-patternDE %>% 
+DEheat <- patternDE %>% 
   mutate(ABA_logFC = ifelse(ABA == 0, 0, ABA_logFC),
          GABA_logFC = ifelse(GABA == 0, 0, GABA_logFC)) %>% 
   dplyr::select(-GABA, -ABA) %>% 
   mutate(order = ordering$order) %>% 
   arrange(order) %>%  
-  dplyr::select(-order) %>% 
+  dplyr::select(-order)
+
+paletteLength <- 100
+myBreaks <- c(seq(min(DEheat), 0, 
+                  length.out = ceiling(paletteLength/2)), 
+              seq(max(DEheat)/paletteLength, max(DEheat), length.out=floor(paletteLength/2)))
+myColor <- colorRampPalette(c("blue", "white", "red"))(paletteLength)
+
+DEheat %>% 
   pheatmap::pheatmap(cluster_cols = FALSE,
            cluster_rows = FALSE,
-           show_rownames = FALSE) 
+           show_rownames = FALSE,
+           color = myColor,
+           breaks = myBreaks) 
 
 # save.image("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
 ```
