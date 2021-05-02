@@ -52,15 +52,15 @@ mds %>%
   left_join(meta) %>%
   ggplot(aes(x = x, y = y)) +
   geom_point(aes(colour  = group), 
-             size = 7) +
+             size = 6) +
   theme_bw() +
   theme(text = element_text(size=20)) +
   labs(x = "BCV distance 1",
        y = "BCV distance 2") -> mdsplot
 
-# export::graph2office(x = mdsplot, type = "ppt",
-#              file = "Barley_MDS.pptx", width = 10,
-#              aspectr = 1.5)
+export::graph2office(x = mdsplot, type = "ppt",
+             file = "Barley_MDS.pptx", width = 6,
+             aspectr = 1.5, append = TRUE)
 ```
 
 ```{r estimating dispersions}
@@ -83,10 +83,11 @@ fit <- glmQLFit(counts_Disp)
 ABA <- glmQLFTest(fit, coef = 2)
 ABAgenes <- ABA$table %>% 
   rownames_to_column("GeneID") %>% 
-  mutate(adj.p = p.adjust(PValue, method = "BH"))
+  mutate(adj.p = p.adjust(PValue, method = "BH"),
+         comparision = "ABA v.s. Control")
 
 ABAgenes %>% 
-  mutate(expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
+  mutate(expression = ifelse(adj.p <= 0.05 & abs(logFC) >= 1, 
                              ifelse(logFC >= 1 ,'Up','Down'),
                              'Stable'),
          expression = fct_relevel(expression, "Up","Stable","Down")) %>% 
@@ -124,10 +125,11 @@ ABAgenes %>%
 GABA <- glmQLFTest(fit, coef = 3)
 GABAgenes <- GABA$table %>% 
   rownames_to_column("GeneID") %>% 
-  mutate(adj.p = p.adjust(PValue, method = "BH"))
+  mutate(adj.p = p.adjust(PValue, method = "BH"),
+         comparision = "GABA v.s. Control")
 
 GABAgenes %>% 
-  mutate(expression = ifelse(adj.p < 0.05 & abs(logFC) >= 1, 
+  mutate(expression = ifelse(adj.p <= 0.05 & abs(logFC) >= 1, 
                              ifelse(logFC >= 1 ,'Up','Down'),
                              'Stable'),
          expression = fct_relevel(expression, "Up","Stable","Down")) %>% 
@@ -159,6 +161,48 @@ GABAgenes %>%
 #              aspectr = 1.5, append = TRUE)
 ```
 
+
+```{r vocano plot}
+rbind(ABAgenes,GABAgenes) %>% 
+  mutate(expression = ifelse(adj.p <= 0.05 & abs(logFC) >= 1, 
+                             ifelse(logFC >= 1 ,'Up','Down'),
+                             'Stable'),
+         expression = fct_relevel(expression, "Up","Stable","Down")) %>% 
+  ggplot(aes(x = logFC, 
+             y = -log10(adj.p), 
+             colour = expression)) +
+  geom_point(alpha = 0.4, size = 3.5) +
+  scale_color_manual(values=c("red", "grey","blue"))+
+  xlim(c(-11, 11)) +
+  geom_vline(xintercept = c(-1,1),
+             lty=4,col="black",
+             lwd=0.8) +
+  geom_hline(yintercept = -log10(0.05),
+             lty=4,col="black",
+             lwd=0.8) +
+  labs(x="",
+       y="")  +
+  facet_wrap(~ comparision,
+             ncol = 2) +
+  theme_bw() +
+  theme(text = element_text(size=20),
+        legend.text = element_text(size = 18),
+        plot.title = element_text(hjust = 0.5), 
+        legend.position = "none") -> Vocano
+
+# export::graph2office(x = Vocano, type = "ppt",
+#              file = "Barley_vocano.pptx", width = 10,
+#              aspectr = 2, append = TRUE)  #export as pdf then change
+
+rbind(ABAgenes,GABAgenes) %>% 
+  ggplot(aes(x = -log10(adj.p))) +
+  geom_histogram(bins = 100) +
+  facet_wrap(~ comparision,
+             ncol = 2)
+  
+
+```
+
 ```{r some prepare for GO}
 DEs <- list(ABAde = ABAgenes,
      GABAde = GABAgenes) %>% 
@@ -167,6 +211,12 @@ DEs <- list(ABAde = ABAgenes,
       filter(adj.p <= 0.05 & abs(logFC) >= 1) %>% 
       mutate(expression = ifelse(logFC >= 1, 
                                  "Up", "Down"))
+  })
+
+tightDEs <- DEs %>% 
+  lapply(function(x){
+    x %>% 
+      filter(adj.p <= 0.01)
   })
 
 ABAtags <- ABAgenes %>% 
@@ -217,17 +267,17 @@ patternDE %>%
            show_rownames = FALSE) -> testplot
 
 # give order to heatmap with logFC
-ordering <- tibble(rowNum = testplot$tree_row$order,
-                   order = seq(1, length(rowNum))) %>% 
-  arrange(rowNum)
+# ordering <- tibble(rowNum = testplot$tree_row$order,
+#                    order = seq(1, length(rowNum))) %>% 
+#   arrange(rowNum)
 
 DEheat <- patternDE %>% 
   mutate(ABA_logFC = ifelse(ABA == 0, 0, ABA_logFC),
          GABA_logFC = ifelse(GABA == 0, 0, GABA_logFC)) %>% 
-  dplyr::select(-GABA, -ABA) %>% 
-  mutate(order = ordering$order) %>% 
-  arrange(order) %>%  
-  dplyr::select(-order)
+  dplyr::select(-GABA, -ABA) #%>% 
+  # mutate(order = ordering$order) %>% 
+  # arrange(order) %>%  
+  # dplyr::select(-order)
 
 paletteLength <- 100
 myBreaks <- c(seq(min(DEheat), 0, 
@@ -237,7 +287,7 @@ myColor <- colorRampPalette(c("blue", "white", "red"))(paletteLength)
 
 DEheat %>% 
   pheatmap::pheatmap(cluster_cols = FALSE,
-           cluster_rows = FALSE,
+           cluster_rows = TRUE,
            show_rownames = FALSE,
            color = myColor,
            breaks = myBreaks) 

@@ -9,7 +9,7 @@ AtHomo <- read_csv("BarleyAnnos/Barley_Arabidopsis_Homolog.csv") %>%
   mutate(ID = str_remove(ID, ".\\d$")) # 29515 barley to 14464 arabidopsis
 
 # load DE genes
-load("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
+#load("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
 
 # convert Hv des to At best hit
 AtDEs <- DEs %>% 
@@ -134,7 +134,7 @@ keggResfilter <- names(keggRes) %>%
   }) %>% 
   bind_rows() %>% 
   group_by(keggID) %>% 
-  filter(any(FDR <= 0.05)) %>% 
+  filter(any(adjP <= 0.05)) %>% 
   arrange(keggID)
 
 # kegg heatmap
@@ -159,7 +159,9 @@ label <- keggHeat$Description
 names(label) <- keggHeat$keggID
 
 # myColor <- colorspace::sequential_hcl(30, "Purples 2") %>% rev()
-myColor <- colorRampPalette(c("white", "#511B54"))(30)
+# myColor <- colorRampPalette(c("white", "#511B54"))(30)
+myColor <- colorRampPalette(c("white", "#2C73D2"))(30)
+
 pheatmap::pheatmap(mat = mapdata,
                    cluster_cols = FALSE,
                    # labels_row = label,
