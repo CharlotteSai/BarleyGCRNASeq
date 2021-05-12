@@ -5,8 +5,10 @@ library(tibble)
 # based on some info from https://ucdavis-bioinformatics-training.github.io/2018-June-RNA-Seq-Workshop/friday/enrichment.html
 
 # load Hv-At homolog genes and make trans id to gene id
-AtHomo <- read_csv("BarleyAnnos/Barley_Arabidopsis_Homolog.csv") %>% 
+AtHomo <- read_csv("./BarleyAnnos/Barley_Arabidopsis_Homolog.csv") %>% 
   mutate(ID = str_remove(ID, ".\\d$")) # 29515 barley to 14464 arabidopsis
+
+plyr::count(AtHomo, "Ath_besthit")
 
 # load DE genes
 #load("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
@@ -94,7 +96,7 @@ keggRes <- AtDEs %>%
       set_names(c("keggID", "DECount")) %>%
       left_join(NotdeKEGG, by = "keggID") %>%
       as_tibble() %>%
-      filter(DECount > 1) %>% # filter de count more than 1 for each go terms
+      # filter(DECount > 1) %>% # filter de count more than 1 for each go terms
       mutate(notDECount = ifelse(is.na(notDECount),0,notDECount)) %>% # avoid NA as a given GO associated gene all in DE 
       arrange(keggID) %>%
       droplevels() 
@@ -144,9 +146,7 @@ keggHeat <- keggResfilter %>%
       adjP <= 0.05, p, 1
     ),
     p = -log10(p)
-  ) 
-
-keggHeat  %<>% 
+  ) %>% 
   reshape2::dcast(keggID + Description ~ Group,
                   value.var = "p") %>%
   mutate_all(~replace(., is.na(.), 0))
@@ -159,8 +159,8 @@ label <- keggHeat$Description
 names(label) <- keggHeat$keggID
 
 # myColor <- colorspace::sequential_hcl(30, "Purples 2") %>% rev()
-# myColor <- colorRampPalette(c("white", "#511B54"))(30)
-myColor <- colorRampPalette(c("white", "#2C73D2"))(30)
+myColor <- colorRampPalette(c("white", "#511B54"))(30)
+# myColor <- colorRampPalette(c("white", "#2C73D2"))(30)
 
 pheatmap::pheatmap(mat = mapdata,
                    cluster_cols = FALSE,
@@ -175,6 +175,20 @@ keggFinal <- keggResfilter%>%
   bind_rows() %>% 
   filter(adjP <= 0.05) %>% 
   split(f = .$Group)
+
+# shared pathway
+intersect(keggFinal[["ABA"]]$keggID,keggFinal[["GABA"]]$keggID)
+# [1] "ath00010" "ath00260" "ath00500" "ath00908" "ath00940"
+# [6] "ath04016"
+# ath00940 similar high enrichment 
+# ath00908/ath00010 more significant in GABA
+# ath 04016 more significant in ABA
+
+
+
+
+
+
 
 
 # # clusterprofiler results
