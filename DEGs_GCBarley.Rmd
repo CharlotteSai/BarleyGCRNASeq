@@ -251,12 +251,12 @@ patternDE <- merge(ABAtags,
   
 
 # same direction
-patternDE %>% 
+shareSame <- patternDE %>% 
   filter((ABA == 1 & GABA == 1) | (ABA == -1 & GABA == -1)) %>% 
   row.names() # 428
 
 # opposite direction
-patternDE %>% 
+shareOps <- patternDE %>% 
   filter((ABA == 1 & GABA == -1) | (ABA == -1 & GABA == 1)) %>% 
   row.names() # 111
 
@@ -264,7 +264,7 @@ patternDE %>%
 patternDE %>% 
   dplyr::select(-contains("logFC")) %>% 
   pheatmap::pheatmap(cluster_cols = FALSE,
-           show_rownames = FALSE) -> testplot
+           show_rownames = FALSE)
 
 # give order to heatmap with logFC
 # ordering <- tibble(rowNum = testplot$tree_row$order,

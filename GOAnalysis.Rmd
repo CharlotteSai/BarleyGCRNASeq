@@ -53,7 +53,7 @@ gene2GO %<>% mclapply(function(x){
   unlist(goAncestors[x]) %>% # this expand each go along back to "all" node, but start with 1 step upper level
     unique %>%
     c(x) %>% # add the original gene2go for the gene
-    setdiff(unlist(rootGO)) %>% # remove the very top level but give free level yo choose with additional info in goSummaries
+    setdiff(unlist(rootGO)) %>% # remove the very top level but give free level to choose with additional info in goSummaries
     setdiff("all") %>% 
     unique
 }, mc.cores = nCores)
@@ -110,7 +110,8 @@ goRes <- DEs %>%
           set_names(c("GO_term", "DECount")) %>%
           left_join(NotdeGO, by = "GO_term") %>%
           as_tibble() %>%
-          filter(DECount > 1) %>% # filter de count more than 1 for each go terms
+          # filter(DECount > 1) %>% # filter de count more than 1 for each go terms
+          # because this pre-filtering adj.p will not as tight as non pre-filtering 
           mutate(notDECount = ifelse(is.na(notDECount),0,notDECount)) %>% # avoid NA as a given GO associated gene all in DE 
           arrange(GO_term) %>%
           droplevels() 
@@ -158,17 +159,14 @@ goRes_filter <- names(goRes) %>%
   lapply(function(x){
     x %>% 
       group_by(GO_term) %>% 
-      filter(any(adjP <= 0.05 & shortest_path >= 4)) #%>% 
-      # filter(!(str_detect(Description,                          "development|morphogenesis|cardioblast|cardiocyte|muscle|heart|animal|determination| cell |synapse")))
-    # filter out animal organ related GO (not relevant)
-  }) 
+      filter(any(adjP <= 0.05 & shortest_path >= 4))
+  }) %>% bind_rows()
 ```
 
 
 ```{r go heatmap}
 # prepare p with direction
 goHeat <- goRes_filter %>%
-  bind_rows() %>% 
   mutate(
     p = ifelse(
       adjP <= 0.05, p, 1
@@ -176,7 +174,12 @@ goHeat <- goRes_filter %>%
     p = ifelse(
       expression == "Up", -log10(p), log10(p)
     )
-  ) 
+  ) %>% 
+  mutate(p = ifelse(
+    (GO_term == "GO:0016301" | GO_term == "GO:0016773") & p == 0, 
+    NA, p
+  )) %>% # manually put significant but different regulation direction GO together
+  na.omit()
 
 paletteLength <- 100
 myBreaks <- c(seq(min(goHeat$p), 0, 
@@ -185,7 +188,7 @@ myBreaks <- c(seq(min(goHeat$p), 0,
 myColor <- colorRampPalette(c("blue", "white", "red"))(paletteLength)
 
 goHeat %<>% 
-      reshape2::dcast(GO_term + Description + expression + ontology ~ Group,
+      reshape2::dcast(GO_term + Description + ontology ~ Group,
                       value.var = "p") %>%
       mutate_all(~replace(., is.na(.), 0)) 
 mapdata <- goHeat %>% 
@@ -205,38 +208,31 @@ pheatmap::pheatmap(mat = mapdata,
                    # show_rownames = FALSE,
                    breaks = myBreaks,
                    color = myColor
-)  
+) -> GO_heat
 
-# goHeat %>% 
-#   with(
-#     pheatmap::pheatmap(mat = tibble(ABA,GABA),
-#                        cluster_cols = FALSE,
-#                        annotation_row = Annos, 
-#                        labels_row = GO_term,
-#                        breaks = myBreaks,
-#                        color = myColor
-#                        )
-#        )
+# export
+# export::graph2office(x = GO_heat, type = "ppt",
+#              file = "GO_Res.pptx", width = 6,
+#              aspectr = 1.4, append = TRUE)
 ```
 
 ```{r summary of GO}
 goFinal <- goRes_filter %>% 
-  bind_rows() %>% 
   filter(adjP <= 0.05) %>% 
   split(f = .$Group)
 
 # GABA ABA share
 go2Gene[["GO:0004553"]] # down
-go2Gene[["GO:0016301"]] # down
+go2Gene[["GO:0016301"]] # opposite share
 go2Gene[["GO:0016773"]] # opposite share
 
 # ABA
 go2Gene[["GO:0006468"]] # most sig down
-go2Gene[["GO:0004722"]] # most sig up
+go2Gene[["GO:0004722"]] # most sig up (only one)
 
 # GABA
 go2Gene[["GO:0046982"]] # most sig up
-go2Gene[["GO:0004553"]] # most sig down
+go2Gene[["GO:0004553"]] # most sig down (only one)
 
 # save.image("~/Box/Bioinfo/BarleyGCRNASeq/GORes.RData")
 ```
