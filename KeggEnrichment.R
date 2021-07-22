@@ -4,11 +4,14 @@ library(magrittr)
 library(tibble)
 # based on some info from https://ucdavis-bioinformatics-training.github.io/2018-June-RNA-Seq-Workshop/friday/enrichment.html
 
-# load Hv-At homolog genes and make trans id to gene id
+# load Hv-At homolog genes and make trans id to gene id 
+# (coming from processed result from Germany, miss 96+52 DEs will refill form blastp)
 AtHomo <- read_csv("./BarleyAnnos/Barley_Arabidopsis_Homolog.csv") %>% 
   mutate(ID = str_remove(ID, ".\\d$")) # 29515 barley to 14464 arabidopsis
 
-plyr::count(AtHomo, "Ath_besthit")
+plyr::count(AtHomo, "Ath_besthit") %>% 
+  arrange(-freq) %>% 
+  head(20)
 
 # load DE genes
 #load("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
@@ -29,10 +32,10 @@ AtDEs %>%
     length(unique(de))
   })
 # $ABAde
-# [1] 2042 -> 1983 -> 1676
+# [1] 2042 -> 1983 -> 1675
 # 
 # $GABAde
-# [1] 2743 -> 2633 -> 2043
+# [1] 2743 -> 2633 -> 2042
 
 # Pull all pathways for AT  
 pathways_list <- keggList("pathway", "ath")
@@ -53,7 +56,6 @@ pathway2gene <- sapply(pathway_codes,
                         }
 ) # 136
 
-
 gene2pathway <- lapply(names(pathway2gene), function(x){
   tibble(
     pathwayID = x,
@@ -61,11 +63,12 @@ gene2pathway <- lapply(names(pathway2gene), function(x){
   )
 }) %>% 
   bind_rows() %>% 
+  na.omit() %>% 
   distinct(pathwayID,Gene) %>% 
   split(f = .$Gene) %>% 
   lapply(function(x){
     x[["pathwayID"]]
-  }) # 5109
+  }) # 5118
 
 #DE genes enrich kegg
 #--------- DE gene summary ----------#
@@ -75,6 +78,18 @@ AtDEs %>%
            n.de2kegg = intersect(de, names(gene2pathway)) %>% length())
   })
 #------------------------------------#
+# $ABAde
+# # A tibble: 1 x 2
+# n.de n.de2kegg
+# <int>     <int>
+#   1  1983       321
+# 
+# $GABAde
+# # A tibble: 1 x 2
+# n.de n.de2kegg
+# <int>     <int>
+#   1  2633       400
+
 
 keggRes <- AtDEs %>% 
   lapply(function(des){
@@ -168,7 +183,12 @@ pheatmap::pheatmap(mat = mapdata,
                    # show_rownames = FALSE,
                    # breaks = myBreaks,
                    color = myColor
-) 
+) #-> KEGGheat
+
+# export
+# export::graph2office(x = KEGGheat, type = "ppt",
+#              file = "KEGG_Res.pptx", width = 6,
+#              aspectr = 1.4, append = TRUE)
 
 # final kegg Results
 keggFinal <- keggResfilter%>% 
@@ -177,18 +197,27 @@ keggFinal <- keggResfilter%>%
   split(f = .$Group)
 
 # shared pathway
-intersect(keggFinal[["ABA"]]$keggID,keggFinal[["GABA"]]$keggID)
+shareKEGG <- intersect(keggFinal[["ABA"]]$keggID,
+                       keggFinal[["GABA"]]$keggID)
 # [1] "ath00010" "ath00260" "ath00500" "ath00908" "ath00940"
 # [6] "ath04016"
-# ath00940 similar high enrichment 
+# ath00940/ath00500 similar high enrichment 
 # ath00908/ath00010 more significant in GABA
-# ath 04016 more significant in ABA
+# ath04016/ath00260 more significant in ABA
+ABASpecial <- setdiff(keggFinal[["ABA"]]$keggID,
+                       keggFinal[["GABA"]]$keggID)
+
+GABASpecial <- setdiff(keggFinal[["GABA"]]$keggID,
+                        keggFinal[["ABA"]]$keggID)
 
 
-
-
-
-
+# about MAPK 
+ABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$ABAde)
+GABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$GABAde)
+Hv_mapkShare <- filter(AtHomo, Ath_besthit %in% intersect(ABA_mapk,GABA_mapk))
+DEs$ABAde %>% filter(GeneID %in% Hv_mapkShare$ID) -> a
+DEs$GABAde %>% filter(GeneID %in% Hv_mapkShare$ID) -> g
+filter(AtHomo, ID %in% intersect(a$GeneID,g$GeneID))
 
 
 # # clusterprofiler results
