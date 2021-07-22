@@ -11,3 +11,4 @@ QCFiles
 *.fa
 *.fasta
 *.png
+*.gff3
