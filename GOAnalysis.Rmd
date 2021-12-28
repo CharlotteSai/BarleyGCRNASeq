@@ -241,15 +241,15 @@ goFinal <- goRes_filter %>%
   filter(adjP <= 0.05) %>% 
   split(f = .$Group)
 
-goFinal %>% 
-  bind_rows() %>% 
-  mutate(GeneRatio = paste0(DECount,"/",N,"-",expression),
-         Description = str_to_sentence(Description)) %>% 
-  dplyr::select(GO_term,Description,GeneRatio,ontology,Group) %>% 
-  reshape2::dcast(GO_term + Description + ontology ~ Group,
-                  value.var = "GeneRatio") %>% 
-  arrange(ontology,GO_term) %>% 
-  write_csv("GoResGABA_ABA.csv")
+# goFinal %>% 
+#   bind_rows() %>% 
+#   mutate(GeneRatio = paste0(DECount,"/",N,"-",expression),
+#          Description = str_to_sentence(Description)) %>% 
+#   dplyr::select(GO_term,Description,GeneRatio,ontology,Group) %>% 
+#   reshape2::dcast(GO_term + Description + ontology ~ Group,
+#                   value.var = "GeneRatio") %>% 
+#   arrange(ontology,GO_term) %>% 
+#   write_csv("GoResGABA_ABA.csv")
 
 
 # GABA ABA share
@@ -264,6 +264,14 @@ go2Gene[["GO:0004722"]] # most sig up (only one)
 # GABA
 go2Gene[["GO:0046982"]] # most sig up
 go2Gene[["GO:0004553"]] # most sig down (only one)
+
+# names(goRes) %>% 
+#   lapply(function(x){
+#     goRes[[x]] %>% 
+#       mutate(Group = str_remove(x, "de"))
+#   }) %>% 
+#   bind_rows() %>% 
+#   write_csv("./output_results/GoResGABA_ABA.csv")
 
 # save.image("~/Box/Bioinfo/BarleyGCRNASeq/GORes.RData")
 ```
