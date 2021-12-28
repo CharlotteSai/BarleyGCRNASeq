@@ -232,6 +232,17 @@ goFinal <- goRes_filter %>%
   filter(adjP <= 0.05) %>% 
   split(f = .$Group)
 
+goFinal %>% 
+  bind_rows() %>% 
+  mutate(GeneRatio = paste0(DECount,"/",N,"-",expression),
+         Description = str_to_sentence(Description)) %>% 
+  dplyr::select(GO_term,Description,GeneRatio,ontology,Group) %>% 
+  reshape2::dcast(GO_term + Description + ontology ~ Group,
+                  value.var = "GeneRatio") %>% 
+  arrange(ontology,GO_term) %>% 
+  write_csv("GoResGABA_ABA.csv")
+
+
 # GABA ABA share
 go2Gene[["GO:0004553"]] # down
 go2Gene[["GO:0016301"]] # opposite share
@@ -311,5 +322,41 @@ lapply(intersect(ABA_16301,GABA_16301), function(g){
 
 #AT homo
 filter(AtHomo, ID %in% intersect(ABA_16301,GABA_16301)) %>% as.data.frame()
+```
+
+```{r photorespiration}
+DEs$GABAde %>% 
+  filter(GeneID %in% intersect(go2Gene[["GO:0009853"]], DEs$GABAde$GeneID)) %>% 
+  left_join(AtHomo, by = c("GeneID" = "ID"))
+
+intersect(go2Gene[["GO:0016984"]], DEs$GABAde$GeneID)
+
+```
+
+```{r}
+DEs$GABAde %>% 
+  filter(GeneID %in% intersect(go2Gene[["GO:0016831"]], DEs$GABAde$GeneID)) %>% 
+  left_join(AtHomo, by = c("GeneID" = "ID"))
+```
+
+```{r photo}
+go %>% 
+  filter(GeneID == "HORVU.MOREX.r2.1HG0067690") %>% 
+  left_join(goSummaries, by = c("GO_terms" = "id")) %>% 
+  filter(shortest_path >= 3) %>% 
+  mutate(Discriptions = annotate::Term(GO_terms)) %>% 
+  as.data.frame()
+```
+
+```{r ABA ROS}
+DEs$ABAde %>% 
+  filter(GeneID %in% intersect(go2Gene[["GO:0042744"]], DEs$ABAde$GeneID)) %>% 
+  left_join(AtHomo, by = c("GeneID" = "ID")) %>% 
+  arrange(expression,Ath_besthit)
+
+DEs$ABAde %>% 
+  filter(GeneID %in% intersect(go2Gene[["GO:0042743"]], DEs$ABAde$GeneID)) %>% 
+  left_join(AtHomo, by = c("GeneID" = "ID")) %>% 
+  arrange(expression,Ath_besthit)
 ```
 

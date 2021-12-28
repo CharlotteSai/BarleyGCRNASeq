@@ -2,6 +2,7 @@ library(KEGGREST)
 library(tidyverse)
 library(magrittr)
 library(tibble)
+library(pathview)
 # based on some info from https://ucdavis-bioinformatics-training.github.io/2018-June-RNA-Seq-Workshop/friday/enrichment.html
 
 # load Hv-At homolog genes and make trans id to gene id 
@@ -123,7 +124,7 @@ keggRes <- AtDEs %>%
         mat <- matrix(c(df$DECount[1], df$notDECount[1],
                         nDE - df$DECount[1], nNotDE - df$notDECount[1]),
                       nrow = 2) %>%
-          set_colnames(c("Genes With GO Term", "Genes Without GO Term")) %>%
+          set_colnames(c("Genes With Kegg", "Genes Without Kegg")) %>%
           set_rownames(c("Genes of Interest", "Control Genes"))
         ft <- fisher.test(mat)
         mutate(df,
@@ -146,8 +147,8 @@ keggRes <- AtDEs %>%
 keggResfilter <- names(keggRes) %>% 
   lapply(function(x){
     keggRes[[x]] %>% 
-      mutate(Group = str_remove(x, "de")) %>% 
-      dplyr::select(-notDECount)
+      mutate(Group = str_remove(x, "de")) #%>% 
+      # dplyr::select(-notDECount)
   }) %>% 
   bind_rows() %>% 
   group_by(keggID) %>% 
@@ -212,13 +213,97 @@ GABASpecial <- setdiff(keggFinal[["GABA"]]$keggID,
 
 
 # about MAPK 
-ABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$ABAde)
-GABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$GABAde)
-Hv_mapkShare <- filter(AtHomo, Ath_besthit %in% intersect(ABA_mapk,GABA_mapk))
+ABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$ABAde) #20
+GABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$GABAde) #18
+Hv_mapkShare <- filter(AtHomo, 
+                       Ath_besthit %in% 
+                         intersect(ABA_mapk,GABA_mapk))
 DEs$ABAde %>% filter(GeneID %in% Hv_mapkShare$ID) -> a
 DEs$GABAde %>% filter(GeneID %in% Hv_mapkShare$ID) -> g
-filter(AtHomo, ID %in% intersect(a$GeneID,g$GeneID))
+# overall 9 genes (3 shares)
+filter(AtHomo, ID %in% c(a$GeneID,g$GeneID))
+# 3 share gene
+filter(AtHomo, ID %in% intersect(a$GeneID,g$GeneID)) -> shared_mapkDE
+bind_rows(DEs) %>% 
+  filter(GeneID %in% shared_mapkDE$ID) %>% 
+  arrange(GeneID) %>% 
+  left_join(shared_mapkDE, by = c("GeneID"="ID")) %>% 
+  select(GeneID,logFC,expression,comparision,
+         Ath_besthit,Araport11_defline) %>% 
+  arrange(Ath_besthit) %>% 
+  mutate(logFC = round(logFC, digits = 4)) %>% 
+  reshape2::dcast(GeneID+Ath_besthit+
+                    Araport11_defline~comparision,
+                  value.var = "logFC") %>% 
+  select(GeneID,contains("v.s."),
+         Ath_besthit,Araport11_defline) %>% 
+  inner_join(go, by = "GeneID") %>% 
+  inner_join(goSummaries, 
+             by = c("GO_terms"="id")) %>% 
+  filter(GeneID == "HORVU.MOREX.r2.7HG0555000" |
+           shortest_path >= 4) %>%
+  # select(-contains("_path", -terminal_node)) %>% 
+  mutate(GO_description = annotate::Term(as.character(GO_terms))) %>% 
+  write_csv("mapkShareGene.csv")
 
+# all DE in MAPK
+AtHomo %>% 
+  filter(Ath_besthit %in% ABA_mapk) %>% 
+  filter(ID %in% c(DEs$ABAde$GeneID)) -> Hv_ABA_mapk
+AtHomo %>% 
+  filter(Ath_besthit %in% GABA_mapk) %>% 
+  filter(ID %in% c(DEs$GABAde$GeneID)) -> Hv_GABA_mapk
+Hv_mapk <- filter(AtHomo, Ath_besthit %in% 
+                    c(ABA_mapk,GABA_mapk)) %>% 
+  filter(ID %in% c(DEs$ABAde$GeneID,DEs$GABAde$GeneID))
+# prepare for export table
+DEs$ABAde %>% filter(GeneID %in% Hv_ABA_mapk$ID) %>% 
+  left_join(Hv_ABA_mapk, by = c("GeneID"="ID")) %>% 
+  select(GeneID,logFC,comparision,
+         Ath_besthit,Araport11_defline) %>% 
+  arrange(Ath_besthit) -> Hv_a
+DEs$GABAde %>% filter(GeneID %in% Hv_GABA_mapk$ID) %>% 
+  left_join(Hv_GABA_mapk, by = c("GeneID"="ID")) %>% 
+  select(GeneID,logFC,comparision,
+         Ath_besthit,Araport11_defline) %>% 
+  arrange(Ath_besthit) -> Hv_g
+
+# rbind(Hv_a,Hv_g) %>% 
+#   mutate(logFC = round(logFC, digits = 4)) %>% 
+#   arrange(comparision,Ath_besthit) %>% 
+#   select(comparision, everything()) %>% 
+#   write_csv("mapkGenes.csv")
+
+# about Carbon fixation in photosynthetic organisms
+ABA_photo <- intersect(pathway2gene$ath00710, AtDEs$ABAde) #6
+GABA_photo <- intersect(pathway2gene$ath00710, AtDEs$GABAde) #11
+
+AtHomo %>% 
+  filter(Ath_besthit %in% ABA_photo) %>% 
+  filter(ID %in% c(DEs$ABAde$GeneID)) -> Hv_ABA_photo
+AtHomo %>% 
+  filter(Ath_besthit %in% GABA_photo) %>% 
+  filter(ID %in% c(DEs$GABAde$GeneID)) -> Hv_GABA_photo
+Hv_photo <- filter(AtHomo, Ath_besthit %in% 
+                     c(ABA_photo,GABA_photo)) %>% 
+  filter(ID %in% c(DEs$ABAde$GeneID,DEs$GABAde$GeneID))
+# prepare for export table
+DEs$ABAde %>% filter(GeneID %in% Hv_ABA_photo$ID) %>% 
+  left_join(Hv_ABA_photo, by = c("GeneID"="ID")) %>% 
+  select(GeneID,logFC,comparision,
+         Ath_besthit,Araport11_defline) %>% 
+  arrange(Ath_besthit) -> Hv_a
+DEs$GABAde %>% filter(GeneID %in% Hv_GABA_photo$ID) %>% 
+  left_join(Hv_GABA_photo, by = c("GeneID"="ID")) %>% 
+  select(GeneID,logFC,comparision,
+         Ath_besthit,Araport11_defline) %>% 
+  arrange(Ath_besthit) -> Hv_g
+
+# rbind(Hv_a,Hv_g) %>% 
+#   mutate(logFC = round(logFC, digits = 4)) %>% 
+#   arrange(comparision,Ath_besthit) %>% 
+#   select(comparision, everything()) %>% 
+#   write_csv("photoGenes.csv")
 
 # # clusterprofiler results
 # KEGGRes <- AtDEs %>%
