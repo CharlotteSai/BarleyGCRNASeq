@@ -213,6 +213,14 @@ ABASpecial <- setdiff(keggFinal[["ABA"]]$keggID,
 GABASpecial <- setdiff(keggFinal[["GABA"]]$keggID,
                         keggFinal[["ABA"]]$keggID)
 
+# names(keggRes) %>%
+#   lapply(function(x){
+#     keggRes[[x]] %>%
+#       mutate(Group = str_remove(x, "de"))
+#   }) %>%
+#   bind_rows() %>% 
+#   write_csv("./output_results/KeggResGABA_ABA.csv")
+
 # ----------- about MAPK ----------- #
 ABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$ABAde) #20
 GABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$GABAde) #18
