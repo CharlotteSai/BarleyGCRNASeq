@@ -1,0 +1,128 @@
+---
+title: "GO_explore"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(magrittr)
+library(GO.db)
+```
+
+```{r function initailization}
+extractorRData <- function(file, object){
+  E <- new.env()
+  load(file=file, envir=E)
+  return(get(object, envir=E, inherits=F))
+}
+
+DEs  <- extractorRData("./DEGs_removeKont_S2.RData", "DEs")
+load(("~/Box/Bioinfo/BarleyGCRNASeq/GORes.RData"))
+```
+
+```{r find potencial targets}
+genePool <- DEs %>% 
+  lapply(function(t){
+    t %>% 
+      split(f = .$expression)
+  })
+# for GO:0016301 - ABA.down and GABA.up
+ABA_16301 <- intersect(go2Gene[["GO:0016301"]], genePool$ABAde$Down$GeneID)
+GABA_16301 <- intersect(go2Gene[["GO:0016301"]], genePool$GABAde$Up$GeneID)
+intersect(ABA_16301,GABA_16301)
+# [1] "HORVU.MOREX.r2.2HG0084420" "HORVU.MOREX.r2.2HG0114190" "HORVU.MOREX.r2.7HG0565210"
+
+# for GO:0016773 - ABA.down and GABA.up
+ABA_16773 <- intersect(go2Gene[["GO:0016773"]], genePool$ABAde$Down$GeneID)
+GABA_16773 <- intersect(go2Gene[["GO:0016773"]], genePool$GABAde$Up$GeneID)
+intersect(ABA_16773,GABA_16773)
+# [1] "HORVU.MOREX.r2.2HG0084420" "HORVU.MOREX.r2.2HG0114190" "HORVU.MOREX.r2.7HG0565210"
+```
+Two GO project same gene as `GO:0016773` is one level above `GO:0016301`. The `GO:0016301` is the direct related GO from the annotation. `GO:0016773` is the one bring to test as ancestor of some lower level GO.
+```{r}
+lapply(intersect(ABA_16301,GABA_16301), function(g){
+  data <- filter(go, GeneID == g)
+  data$GO_terms %>% 
+    lapply(function(x){
+      goAncestors[x] %>% 
+        lapply(function(s){
+          s %>% str_subset("GO:0016773")
+        })
+    })
+})
+```
+`GO:0016773` is coming form `GO:0004672`from all three genes and `GO:0004674` gene1 and 3.
+```{r find genes for these two GO}
+# for GO:0004672 - ABA.down and GABA.up
+ABA_4672 <- intersect(go2Gene[["GO:0004672"]], genePool$ABAde$Down$GeneID)
+GABA_4672 <- intersect(go2Gene[["GO:0004672"]], genePool$GABAde$Up$GeneID)
+intersect(ABA_4672,GABA_4672)
+
+# for GO:0004674 - ABA.down and GABA.up
+ABA_4674 <- intersect(go2Gene[["GO:0004674"]], genePool$ABAde$Down$GeneID)
+GABA_4674 <- intersect(go2Gene[["GO:0004674"]], genePool$GABAde$Up$GeneID)
+intersect(ABA_4674,GABA_4674)
+```
+
+```{r link to At}
+AtHomo <- read_csv("./BarleyAnnos/Barley_Arabidopsis_Homolog.csv") %>% 
+  mutate(ID = str_remove(ID, ".\\d$")) # 29515 barley to 14464 arabidopsis
+```
+
+```{r}
+# logFC
+DEs$ABAde %>% filter(GeneID %in% intersect(ABA_16301,GABA_16301))
+DEs$GABAde %>% filter(GeneID %in% intersect(ABA_16301,GABA_16301))
+
+# Associated GO
+lapply(intersect(ABA_16301,GABA_16301), function(g){
+  filter(go, GeneID == g) %>% 
+    mutate(discription = Term(as.character(GO_terms))) %>% 
+    dplyr::select(GeneID, everything()) %>% as.data.frame()
+})
+
+#AT homo
+filter(AtHomo, ID %in% intersect(ABA_16301,GABA_16301)) %>% as.data.frame()
+```
+
+```{r photorespiration}
+DEs$GABAde %>% 
+  filter(GeneID %in% intersect(go2Gene[["GO:0009853"]], DEs$GABAde$GeneID)) %>% 
+  left_join(AtHomo, by = c("GeneID" = "ID"))
+
+intersect(go2Gene[["GO:0016984"]], DEs$GABAde$GeneID)
+
+```
+
+```{r}
+DEs$GABAde %>% 
+  filter(GeneID %in% intersect(go2Gene[["GO:0016831"]], DEs$GABAde$GeneID)) %>% 
+  left_join(AtHomo, by = c("GeneID" = "ID"))
+```
+
+```{r photo}
+go %>% 
+  filter(GeneID == "HORVU.MOREX.r2.1HG0067690") %>% 
+  left_join(goSummaries, by = c("GO_terms" = "id")) %>% 
+  filter(shortest_path >= 3) %>% 
+  mutate(Discriptions = annotate::Term(GO_terms)) %>% 
+  as.data.frame()
+```
+
+```{r ABA ROS}
+DEs$ABAde %>% 
+  filter(GeneID %in% intersect(go2Gene[["GO:0042744"]], DEs$ABAde$GeneID)) %>% 
+  left_join(AtHomo, by = c("GeneID" = "ID")) %>% 
+  arrange(expression,Ath_besthit)
+
+DEs$ABAde %>% 
+  filter(GeneID %in% intersect(go2Gene[["GO:0042743"]], DEs$ABAde$GeneID)) %>% 
+  left_join(AtHomo, by = c("GeneID" = "ID")) %>% 
+  arrange(expression,Ath_besthit)
+```

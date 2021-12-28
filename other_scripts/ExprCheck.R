@@ -2,6 +2,15 @@
 library(tidyverse)
 library(magrittr)
 
+# inticial function for extract R object
+extractorRData <- function(file, object){
+  E <- new.env()
+  load(file=file, envir=E)
+  return(get(object, envir=E, inherits=F))
+}
+
+countList <- extractorRData("./DEGs_removeKont_S2.RData", "countList")
+
 ExpData <- countList %>% 
   cpm() %>% 
   as.data.frame()

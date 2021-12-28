@@ -15,7 +15,14 @@ plyr::count(AtHomo, "Ath_besthit") %>%
   head(20)
 
 # load DE genes
-#load("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
+# inticial function for extract R object
+extractorRData <- function(file, object){
+  E <- new.env()
+  load(file=file, envir=E)
+  return(get(object, envir=E, inherits=F))
+}
+
+DEs  <- extractorRData("./DEGs_removeKont_S2.RData", "DEs")
 
 # convert Hv des to At best hit
 AtDEs <- DEs %>% 
@@ -23,9 +30,7 @@ AtDEs <- DEs %>%
     x %<>% 
       left_join(AtHomo, by = c("GeneID" = "ID")) %>% 
       na.omit() # remove Hv did not have At -> NA
-    unlist(x$Ath_besthit) 
-      # unique() # this will lose some for the representation as the basic of 
-      # the over-representation test is counting
+    unlist(x$Ath_besthit)
   })
 
 AtDEs %>% 
@@ -202,17 +207,13 @@ shareKEGG <- intersect(keggFinal[["ABA"]]$keggID,
                        keggFinal[["GABA"]]$keggID)
 # [1] "ath00010" "ath00260" "ath00500" "ath00908" "ath00940"
 # [6] "ath04016"
-# ath00940/ath00500 similar high enrichment 
-# ath00908/ath00010 more significant in GABA
-# ath04016/ath00260 more significant in ABA
 ABASpecial <- setdiff(keggFinal[["ABA"]]$keggID,
                        keggFinal[["GABA"]]$keggID)
 
 GABASpecial <- setdiff(keggFinal[["GABA"]]$keggID,
                         keggFinal[["ABA"]]$keggID)
 
-
-# about MAPK 
+# ----------- about MAPK ----------- #
 ABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$ABAde) #20
 GABA_mapk <- intersect(pathway2gene$ath04016, AtDEs$GABAde) #18
 Hv_mapkShare <- filter(AtHomo, 
@@ -274,7 +275,7 @@ DEs$GABAde %>% filter(GeneID %in% Hv_GABA_mapk$ID) %>%
 #   select(comparision, everything()) %>% 
 #   write_csv("mapkGenes.csv")
 
-# about Carbon fixation in photosynthetic organisms
+# ----------- about Carbon fixation in photosynthetic organisms ----------- #
 ABA_photo <- intersect(pathway2gene$ath00710, AtDEs$ABAde) #6
 GABA_photo <- intersect(pathway2gene$ath00710, AtDEs$GABAde) #11
 
@@ -305,14 +306,3 @@ DEs$GABAde %>% filter(GeneID %in% Hv_GABA_photo$ID) %>%
 #   select(comparision, everything()) %>% 
 #   write_csv("photoGenes.csv")
 
-# # clusterprofiler results
-# KEGGRes <- AtDEs %>%
-#   lapply(function(des){
-#     clusterProfiler:: enrichKEGG(des, organism = "ath",
-#                pAdjustMethod = "fdr")
-#   })
-# 
-# KEGGRes[["ABAde"]]@result %>% 
-#   filter(p.adjust <= 0.05)
-# KEGGRes[["GABAde"]]@result %>% 
-#   filter(p.adjust <= 0.05)
