@@ -211,6 +211,10 @@ DEs <- list(ABAde = ABAgenes,
                                  "Up", "Down"))
   })
 
+# DEs %>% 
+#   bind_rows() %>% 
+#   write_csv("./output_results/DGEList.csv")
+
 # save.image("~/Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData")
 ```
 
