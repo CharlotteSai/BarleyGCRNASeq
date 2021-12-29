@@ -1,4 +1,0 @@
-Building DAG of jobs...
-MissingInputException in line 54 of /fast/users/a1673472/Hv_RNASeqFromGerman/snakemake/Snakefile:
-Missing input files for rule fastqc_raw:
-../0_fastq/Kont_S1_R1.fastq.gz
