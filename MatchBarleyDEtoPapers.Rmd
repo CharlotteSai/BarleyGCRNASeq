@@ -1,0 +1,247 @@
+---
+title: "paper_data_cleanup"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load packages}
+library(tidyverse)
+library(magrittr)
+library(seqinr)
+library(readxl)
+```
+
+## GC confirm from barley RNASeq data
+The perpose of this script is to match the published data to our DE genes ids to confirm our data is doing as expected
+GC RNASeq data obtained from "A Tandem Amino Acid Residue Motif in Guard Cell SLAC1 Anion Channel of Grasses Allows for the Control of Stomatal Aperture by Nitrate" (https://www.sciencedirect.com/science/article/pii/S0960982218303567?via%3Dihub#app2)
+
+```{r load blast results}
+# calculate embl version barley aa length
+aa_IBSC <- read.fasta(file = "BarleyAnnos/Hordeum_vulgare.IBSC_v2.pep.all.fa", 
+                      seqtype="AA")
+Length_IBSC <- tibble(embl_ID = names(aa_IBSC),
+                      embel_Length = getLength(aa_IBSC))
+
+# calculate PGSB version baley AA length
+aa_PGSB <- read.fasta(file = "BarleyAnnos/Barley_Morex_V2_gene_annotation_PGSB.all.fasta", 
+                      seqtype="AA")
+Length_PGSB <- tibble(my_ID = names(aa_PGSB),
+                      my_Length = getLength(aa_PGSB))
+
+# load blastp results and attach length info
+# our id is Q and paper id is subject - so we looking for every gene in our data to found
+# possible match in paper id and not limited to 1 match 
+proteinMatching <- read_delim("blastRes/PGSBtoIBSC_Barly.csv", 
+                        delim = "\t",
+                        comment = "#",
+                        col_names = FALSE) %>% 
+  set_colnames(c("my_ID", "embl_ID", "% identity", "alignment length", 
+                 "mismatches", "gap opens", "q. start", "q. end", "s. start", "s. end", 
+                 "evalue", "bit score")) %>% 
+  left_join(Length_IBSC, by = "embl_ID") %>% 
+  left_join(Length_PGSB, by = "my_ID") %>% 
+  mutate(embl_per = `alignment length`/embel_Length,
+         PGSB_per = `alignment length`/my_Length)
+
+# add extra information as matching handel
+proteinMatching %<>% 
+  mutate(my_gene = str_remove(my_ID, ".\\d+$"),
+         embl_gene = str_remove(embl_ID, ".\\d+$")) %>% 
+  select(contains("_gene"),everything()) 
+
+quickmatch <- proteinMatching %>% 
+  dplyr::select(contains("_gene")) %>% 
+  unique()
+# 390529 gene-gene match
+# 142952 protein-proetion id, this basically the gene-protein match, because in my protein id there alway .1 no more isoforms, but embl protein info have multiple isoforms for one gene 
+
+# some genes with SKOR (AT3G02850) (the member of groupV in Shaker family potassium ion (K+) channel family) - for chapter3 discussion
+quickmatch %>% 
+  filter(embl_gene == "HORVU7Hr1G040970") %>% 
+  left_join(proteinMatching, by = c("my_gene","embl_gene")) %>% 
+  as.data.frame() # - this should be HORVU.MOREX.r2.7HG0555210 as in longer aa matching and 100 identity
+
+quickmatch %>% 
+  filter(embl_gene == "HORVU7Hr1G040990")  %>% 
+  left_join(proteinMatching, by = c("my_gene","embl_gene")) %>% 
+  as.data.frame() # - this should be HORVU.MOREX.r2.7HG0555240 as in longer aa matching and 100 identity
+
+```
+
+```{r paper data prepare}
+# load paper data
+paperData <- read_xlsx("./paperRes/HvSLAC-RNASeq.xlsx", sheet = "RNASeq_DGE_formated") 
+
+ExpandBioinfo <- paperData %>% 
+  mutate(B = ifelse(str_detect(`Bauer -Tables`,"B"), 
+                    "At - Guard Cell enriched genes", ""),
+         C = ifelse(str_detect(`Bauer -Tables`,"C"), 
+                    " At - overlap with guard cell protein database by Zhao et al. 2008", ""),
+         D = ifelse(str_detect(`Bauer -Tables`,"D"), 
+                    " At - Guard Cell enriched Transporters", ""),
+         E = ifelse(str_detect(`Bauer -Tables`,"E"), 
+                    " At - relative humidity (RH) regulated genes", ""),
+         F1 = ifelse(str_detect(`Bauer -Tables`,"F"), 
+                    " At - RH regulated + Guard Cell enriched", ""),
+         G = ifelse(str_detect(`Bauer -Tables`,"G"), 
+                    " At - ABA regulated", ""),
+         M = ifelse(str_detect(`Bauer -Tables`,"M"), 
+                    " At - Guard Cell enriched + ABA regulated genes common with Yang and Wang", ""),
+         N =ifelse(str_detect(`Bauer -Tables`,"N"), 
+                    " At - Filtered Guard Cell enriched genes", "")
+  ) %>% 
+  mutate(Discription = paste(B,C,D,E,F1,G,M,N, sep = "")) %>% 
+  dplyr::select(`barley gene ID`, `Best Ath match`,GCSC_TPM,`Bauer -Tables`, Discription) %>% 
+  mutate(Discription = str_replace(Discription, "NANANANANANANANA", ""))
+```
+
+```{r load our DE}
+# enable the function to extract my R object
+extractorRData <- function(file, object) {
+      #' Function for extracting an object from a .RData file created by R's save() command
+      #' Inputs: RData file, object name
+      E <- new.env()
+      load(file=file, envir=E)
+      return(get(object, envir=E, inherits=FALSE))
+}
+
+# extract DE data
+myDEs <- extractorRData("~/Library/CloudStorage/Box-Box/Bioinfo/BarleyGCRNASeq/DEGs_removeKont_S2.RData", "DEs")
+```
+
+
+```{r attach info to our DE}
+# attach paper data  and bioinfo by blastp generated handle
+HvCGmatDEs <- myDEs %>% 
+  lapply(function(de){
+    de %>% 
+      left_join(quickmatch, by = c("GeneID" = "my_gene")) %>% 
+      left_join(ExpandBioinfo, by = c("embl_gene" = "barley gene ID")) %>% 
+      mutate(Discription = replace(Discription, is.na(Discription), "")) %>% 
+      select(-`Best Ath match`)
+  })
+
+# check if any DEs not have any match
+HvCGmatDEs %>% 
+  lapply(function(com){
+    com$embl_gene %>% 
+      is.na() %>% 
+      table()
+  })
+# $ABAde
+# .
+# FALSE  TRUE 
+#  2529    61 
+# 
+# $GABAde
+# .
+# FALSE  TRUE 
+#  3454   105 
+
+# regardless of ABA or GABA DE
+HvCGmatDEs %>% 
+  bind_rows() %>%
+  dplyr::select(GeneID, embl_gene) %>% 
+  unique() %>% 
+  pull(embl_gene) %>% 
+  is.na() %>% 
+  table()
+# FALSE  TRUE 
+#  5319   148 
+
+# check how many paper genes attached
+HvCGmatDEs %>% 
+  lapply(function(com){
+    tpm <- com %>% 
+      dplyr::select(GeneID, embl_gene,GCSC_TPM) %>%
+      unique() %>% 
+      filter(GCSC_TPM != 0) 
+      # remove NA and 0 tpm, not in paper data or non-expressed in GCSC
+    
+    tibble(n.DE = tpm$GeneID %>% 
+             unique() %>% 
+             length(),
+           n.paperID = tpm$embl_gene %>% 
+             unique() %>% 
+             length()
+           )
+  })
+# $ABAde
+# # A tibble: 1 × 2
+#    n.DE n.paperID
+#   <int>     <int>
+# 1  1752/2042      1885
+# 
+# $GABAde
+# # A tibble: 1 × 2
+#    n.DE n.paperID
+#   <int>     <int>
+# 1  2375/2743      2456
+
+```
+
+```{r find gene of interests}
+# table 4.3
+genes <- c(
+  "HORVU.MOREX.r2.2HG0084420",
+  "HORVU.MOREX.r2.2HG0114190",
+  "HORVU.MOREX.r2.7HG0565210"
+)
+# table 4.4
+genes <- c(
+  "HORVU.MOREX.r2.1HG0045440",
+  "HORVU.MOREX.r2.2HG0154390",
+  "HORVU.MOREX.r2.7HG0555000"
+)
+
+HvCGmatDEs %>% 
+  lapply(function(de){
+    de %>% 
+      filter(GeneID %in% genes)
+  })
+```
+
+## ABA treantment confirm from Arabidopsis ABA GC Microarray
+Microarray data obtained from "Microarray Expression Analyses of Arabidopsis Guard Cells and Isolation of a Recessive Abscisic Acid Hypersensitive Protein Phosphatase 2C Mutant" (https://academic.oup.com/plcell/article/16/3/596/6010339#233760789)
+
+```{r loading ABA data and blast match}
+AtHomo <- read_csv("./blastRes/Barley_Arabidopsis_Homolog.csv") %>% 
+  mutate(ID = str_remove(ID, ".\\d$"))
+
+ABApaper <- read_excel("paperRes/Leonhardt_SupplTable1+GC_ABA.xls", 
+    sheet = "GC_ABA") %>% 
+  filter(!str_detect(Description, "No hits")) %>% 
+  mutate(AGI_Number = str_to_upper(AGI_Number)) %>% 
+  mutate(AGI_Number = str_extract(AGI_Number, "\\w+")) 
+ABApaper_matchHv <- ABApaper %>% 
+  left_join(AtHomo, by = c("AGI_Number" = "Ath_besthit")) %>%  # attach Hv genes
+  filter(!is.na(ID))
+```
+
+```{r match ABA DEs to paper Res}
+repoABA_DEs <- myDEs$ABAde %>% 
+  inner_join(ABApaper_matchHv, by = c("GeneID" = "ID")) %>% 
+  select(GeneID,logFC,logCPM,adj.p,
+         comparision, AGI_Number, Cluster,
+         `Seki et al.`, `Hoth et al.`,Araport11_defline)
+
+tibble(n_DE = length(myDEs$ABAde$GeneID),
+       n_paperDE = length(ABApaper$AGI_Number),
+       n_DEhv = unique(repoABA_DEs$GeneID) %>% length,
+       n_DEat = unique(repoABA_DEs$AGI_Number) %>% length)
+
+#    n_DE n_paperDE n_DEhv n_DEat
+# 1  2042       151     38     24
+```
+
+
+
+
+
+
