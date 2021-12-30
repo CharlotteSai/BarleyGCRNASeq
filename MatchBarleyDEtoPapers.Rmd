@@ -211,7 +211,7 @@ HvCGmatDEs %>%
 Microarray data obtained from "Microarray Expression Analyses of Arabidopsis Guard Cells and Isolation of a Recessive Abscisic Acid Hypersensitive Protein Phosphatase 2C Mutant" (https://academic.oup.com/plcell/article/16/3/596/6010339#233760789)
 
 ```{r loading ABA data and blast match}
-AtHomo <- read_csv("./blastRes/Barley_Arabidopsis_Homolog.csv") %>% 
+AtHomo <- read_csv("./BarleyAnnos//Barley_Arabidopsis_Homolog.csv") %>% 
   mutate(ID = str_remove(ID, ".\\d$"))
 
 ABApaper <- read_excel("paperRes/Leonhardt_SupplTable1+GC_ABA.xls", 
